@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd: run the weekly DE Slack report every Monday at 08:00 in
+  America/New_York.
+
+  Install:
+    1) cp this file to ~/Library/LaunchAgents/com.vibeem.weekly-de-report.plist
+    2) Edit paths and env vars (SLACK_BOT_TOKEN, ROOTLY_API_KEY).
+    3) launchctl load ~/Library/LaunchAgents/com.vibeem.weekly-de-report.plist
+
+  Unload:
+    launchctl unload ~/Library/LaunchAgents/com.vibeem.weekly-de-report.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.vibeem.weekly-de-report</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>/ABSOLUTE/PATH/TO/VibeEM/scripts/weekly_de_support_report.py</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>SLACK_BOT_TOKEN</key>
+    <string>xoxb-your-bot-token</string>
+    <key>ROOTLY_API_KEY</key>
+    <string>your-rootly-api-token</string>
+    <key>ROOTLY_TEAM_ID</key>
+    <string>dbb67ed7-7125-43c4-851e-6b7a2d443f49</string>
+    <key>SLACK_CHANNEL</key>
+    <string>D072F01EZEH</string>
+    <key>TZ</key>
+    <string>America/New_York</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>8</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/weekly-de-report.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/weekly-de-report.err</string>
+</dict>
+</plist>

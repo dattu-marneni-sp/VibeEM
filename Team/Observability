@@ -1,0 +1,14 @@
+
+Data Engineering team observability config page:
+
+Rootly info
+    Rootly team : Data Engineering
+    Rootly team key: dbb67ed7-7125-43c4-851e-6b7a2d443f49
+    Rootly Connection API Key:
+
+observability slack channels
+    Prod Incident slack channel :  #team-data-enginering-prod-only-alerts
+    Non prod Incident slack channel : #team-data-engineering-nonprod-alerts
+    On call schedule slack channel : #team-data-engineering-oncall-schedule
+
+Tech Ops page: https://sailpoint.atlassian.net/wiki/x/EICkJQE
