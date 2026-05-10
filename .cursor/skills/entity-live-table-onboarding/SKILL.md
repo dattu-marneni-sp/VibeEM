@@ -11,6 +11,18 @@ Use this workflow for `sailpoint/entity-live-dip` when adding or changing a sche
 
 `entity-live-dip` is schema-driven. A JSON schema under `transformers/streaming/schema_converter/schemas` is the source of truth. The schema converter generates dbt source YAML, dbt model SQL, Airflow/Flink DAG templates, checkpoint config entries, and Soda data quality checks.
 
+## Not Every Table Is “Schema → Autogen”
+
+**Decision point (before assuming the standard workflow):** Open `transformers/streaming/schema_converter/Makefile` and inspect the `BLACKLIST` variable (comma-separated JSON filenames). If the entity’s schema file is listed there, the generator **intentionally skips** it. Onboarding is **manual** for that entity:
+
+- Custom or hand-maintained dbt under `transformers/streaming/dbt/models/entity_live_tables/<entity>/` (possibly with a `*_lag.sql` view and changelog UDFs).
+- Airflow/Flink templates under `pipelines/dags/entity_live_dip/stateful_changelog_tables/` (and configs under `stateful_changelog_tables/configs/**`), not only `entity_live_dags/`.
+- Checkpoint keys and version entries in the matching config trees; parallelism overrides if the template supports them.
+- Migrations under `pipelines/dags/entity_live_dip/entity_live_dags/migrations/**` when applicable.
+- **Team-owned Soda** under `transformers/fire/src/soda_quality_checks/rcp_team/` and registration in quality DAG templates such as `pipelines/dags/entity_live_dip/quality_checks/rcp_team_template.yml`—do not expect `auto_generated_checks` alone to cover SCD or cross-table rules.
+
+Example blacklist-driven entity: `identity_role_assignment_account_target.json` → custom model `transformers/streaming/dbt/models/entity_live_tables/identity_role_assignment_account_target/identity_role_assignment_account_target.sql` and template `pipelines/dags/entity_live_dip/stateful_changelog_tables/identity_role_assignment_account_target_template.yml`.
+
 ## Workflow
 
 1. Add or update the schema:

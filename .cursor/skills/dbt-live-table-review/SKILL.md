@@ -1,6 +1,6 @@
 ---
 name: dbt-live-table-review
-description: Reviews dbt live table changes in SailPoint entity-live-dip for generated-file safety, Snowflake connector config, Kafka source consistency, standard platform columns, primary key/grain, type mapping, delete handling, tags, and validation. Use when reviewing generated or custom dbt models under entity_live_tables.
+description: Reviews dbt live table changes in SailPoint entity-live-dip for generated-file safety, blacklist/stateful changelog customs, Snowflake connector config (including SCD sink strategy), Kafka source consistency, standard platform columns, primary key/grain, type mapping, delete handling, tags, lag views and changelog UDFs, checkpoint/parallelism alignment, team-owned Soda, and validation. Use when reviewing generated or custom dbt models under entity_live_tables.
 ---
 
 # dbt Live Table Review
@@ -26,12 +26,13 @@ Verify expected model config:
 - `materialized = 'table'`
 - `connector_properties.connector = 'snowflake'`
 - `connector_properties.table` matches the schema/table name
+- Optional: `connector_properties` may include `'sink-strategy': 'SNOWFLAKE_STREAM_SCD_STRATEGY'` for SCD sinks—then review SCD semantics and team Soda checks, not only live columns.
 - `checkpointing_enabled = true`
 - `checkpoint_version = env_var("CHECKPOINT_VERSION")`
-- `checkpoint_name` defaults to `<table_name>_live`
-- `primary_key = 'KAFKA_KEY'`
+- `checkpoint_name` usually defaults to `<table_name>_live`; **custom/blacklisted models** may use `env_var("CHECKPOINT_NAME", ...)`—must match Airflow `checkpoint_name`.
+- `primary_key` is usually `'KAFKA_KEY'`; **changelog / blacklisted** models may use `'PK'` or another enforced grain—validate uniqueness and Flink upsert behavior.
 - `partition_by = 'TENANT_ID'`
-- `tags` include `ENTITY_LIVE` and the table-specific tag
+- `tags` include `ENTITY_LIVE` and the table-specific tag; changelog tables may use tags like `CHANGELOG` instead—confirm observability and DAG conventions.
 
 ### 3. Source Consistency
 
@@ -120,12 +121,30 @@ make autogen_all
 
 Then confirm `git status` only shows intentional schema and generated changes.
 
+### 11. Blacklisted / Custom Live Tables And Stateful Changelog (High Priority)
+
+Some entities are listed in `BLACKLIST` in `transformers/streaming/schema_converter/Makefile` (comma-separated schema filenames). Generator output is intentionally skipped for those schemas; live pipelines are **team-maintained**. Treat reviews of these models as **custom contract reviews**, not “fix the JSON schema and regenerate.”
+
+**Concrete reference:** `identity_role_assignment_account_target`
+
+| Area | What to verify |
+|------|----------------|
+| **Blacklist** | Schema `identity_role_assignment_account_target.json` is on `BLACKLIST`; dbt/source/DAG/Soda are not expected to be produced by autogen for that name. |
+| **DAG family** | Stateful changelog tables use templates under `pipelines/dags/entity_live_dip/stateful_changelog_tables/` (e.g. `identity_role_assignment_account_target_template.yml`), not only `entity_live_dip/entity_live_dags/`. Match `dag_id`, `job_name`, `checkpoint_name`, and env vars to the dbt model. |
+| **Checkpoint version** | Per-environment values live under `pipelines/dags/entity_live_dip/stateful_changelog_tables/configs/**` as `<table>_checkpoint_version`. Align bumps with Flink consumer groups / recovery expectations. |
+| **Parallelism** | Stateful templates may define `parallelism` and `<table>_parallelism_override` (see template task `spec`). Overrides affect throughput and ordering assumptions—review blast radius when they change. |
+| **Lag / state model** | Changelog tables often use a **lag view** (materialized `view`) over the Kafka source, e.g. `transformers/streaming/dbt/models/entity_live_tables/identity_role_assignment_account_target/identity_role_assignment_account_target_lag.sql`, with window functions (`LAG`) to carry prior array/blob state for diffing. The main model should `ref()` the lag model, not the raw source. |
+| **Changelog UDFs** | Per-event diffs use Flink SQL UDFs registered in dbt, e.g. `array_diff_changelog` and `map_diff_changelog` (see `transformers/streaming/dbt/macros/create_udfs.sql`). Review **key columns passed into the UDF** (e.g. which JSON paths define “same row”), **NULL/empty array sentinels**, and **LATERAL TABLE** grain—wrong keys duplicate or drop changelog rows. |
+| **`SNOWFLAKE_STREAM_SCD_STRATEGY`** | When `connector_properties` sets `'sink-strategy': 'SNOWFLAKE_STREAM_SCD_STRATEGY'`, Snowflake maintains **SCD** semantics downstream of the streaming sink (history/current rows, validity intervals). Review how live-row deletes (`HARD_DELETED`), updates, and natural keys map to SCD `VALID_FROM` / `VALID_TO` / `IS_CURRENT` behavior expected by consumers—not only the live projection in dbt. |
+| **Custom primary keys** | Blacklisted/changelog models may set `primary_key = 'PK'` (or another column) and custom `checkpoint_name` via `env_var` defaults instead of the generated `KAFKA_KEY` + `<table>_live` pattern. Confirm PK stability, uniqueness per tenant, and alignment with the changelog UDF output. |
+| **Team-owned Soda** | Autogen checks under `transformers/fire/src/soda_quality_checks/auto_generated_checks/` may not cover SCD or cross-table logic. Look for RCP/team YAML under `transformers/fire/src/soda_quality_checks/rcp_team/` (e.g. `scd_checks_identity_role_assignment_account_target.yml`) and ensure the quality DAG lists them—`pipelines/dags/entity_live_dip/quality_checks/rcp_team_template.yml` references `checks_dir: .../rcp_team` and named check files. |
+
 ## Findings Format
 
 When reviewing, lead with issues ordered by severity. Include:
 
-- Correctness or data loss risks
+- Correctness or data loss risks (including SCD and changelog UDF behavior when applicable)
 - Schema/source/model mismatches
 - Primary key or grain concerns
 - Type mapping problems
-- Missing validation or stale generated outputs
+- Missing validation or stale generated outputs (and missing team Soda when autogen does not apply)

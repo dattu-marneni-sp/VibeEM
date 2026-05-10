@@ -72,6 +72,8 @@ Run:
 make debug
 ```
 
+**Blacklist vs failure:** A schema on `BLACKLIST` is **skipped by design**. Autogen will not emit dbt models, standard DAG templates, checkpoints, or auto Soda for that filename. That is **not** a generator bug or CI regression—do not “fix” it by forcing generation unless the team is intentionally removing the blacklist entry. For blacklisted entities, outputs are maintained manually (often under `stateful_changelog_tables/` and custom dbt paths—see entity-live-table-onboarding skill).
+
 If the schema is intentionally custom, blacklist it and manage custom outputs manually.
 
 ### Invalid Or Unsupported Schema

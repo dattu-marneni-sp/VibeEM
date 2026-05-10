@@ -49,6 +49,8 @@ Soda checks should include `missing_count = 0` for:
 
 Review whether nullable business fields are intentionally nullable. Do not add not-null checks just because a field is important if the producer can legitimately omit it.
 
+**Auto-generated vs team-owned:** Most schema-backed tables ship checks from `make autogen_soda_checks` into `transformers/fire/src/soda_quality_checks/auto_generated_checks/`. **Blacklist/stateful/SCD-heavy tables** often add or rely on YAML under `transformers/fire/src/soda_quality_checks/rcp_team/` (and similar team dirs). When reviewing a PR, confirm those files are wired into the quality DAG (e.g. `pipelines/dags/entity_live_dip/quality_checks/rcp_team_template.yml` lists `check_files` under `checks_dir: .../rcp_team`). Missing wiring means checks never run in CI/schedules even if YAML exists.
+
 ### 4. Uniqueness And Grain
 
 Confirm the intended grain:
@@ -130,6 +132,14 @@ Use row count checks carefully:
 - New tables may be empty before rollout.
 - Production live tables usually should not unexpectedly drop to zero.
 - Row count drops should be compared to deployment, replay, checkpoint, and producer timelines.
+
+### 11b. SCD And Source-vs-SCD Consistency
+
+When the streaming sink uses `SNOWFLAKE_STREAM_SCD_STRATEGY` (see dbt `connector_properties`), Snowflake exposes SCD tables/views with validity columns. Team checks often assert:
+
+- **Schema:** presence and types of `VALID_FROM`, `VALID_TO`, and often `IS_CURRENT` (example pattern in `transformers/fire/src/soda_quality_checks/rcp_team/scd_checks_identity_role_assignment_account_target.yml`).
+- **Temporal consistency:** no overlapping open intervals for the same business key unless the model explicitly allows it; `VALID_FROM`/`VALID_TO` ordering sanity.
+- **Source live vs SCD non-deleted counts:** failed-row queries that compare a **source or live assignment grain** (e.g. counts from `IDENTITY_ROLE_ASSIGNMENT_V1_LIVE` in a time window) to **SCD rows** filtered with `IS_CURRENT = TRUE` (and optional validity overlap with the window). Mismatches flag changelog drift, missed deletes, or PK grain differences—triage with Flink changelog UDF output and Reconciler, not only Soda.
 
 ### 12. Downstream Impact
 

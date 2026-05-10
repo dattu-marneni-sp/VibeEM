@@ -30,6 +30,8 @@ Look for changes in:
 - `transformers/streaming/dbt/models/entity_live_tables/**`
 - `pipelines/dags/entity_live_dip/entity_live_dags/**`
 - `pipelines/dags/entity_live_dip/entity_live_dags/configs/**`
+- `pipelines/dags/entity_live_dip/stateful_changelog_tables/**`
+- `pipelines/dags/entity_live_dip/stateful_changelog_tables/configs/**`
 - `transformers/fire/src/soda_quality_checks/**`
 - `pipelines/dags/entity_live_dip/entity_live_dags/migrations/**`
 
@@ -49,12 +51,15 @@ Identify the DAG:
 - Reconciler DAG: `sf_live_reconciler_<dag_label>`
 - Metrics DAG: `sf_live_event_data_metrics_<dag_label>`
 
+**Stateful changelog branch:** Tables driven from `pipelines/dags/entity_live_dip/stateful_changelog_tables/` use the same `sf_live_<table>_<dag_label>` naming but pull config from `stateful_changelog_tables/configs/**` (checkpoint version, parallelism overrides). If incident symptoms match changelog/SCD drift (duplicate PKs, wrong account targets, SCD vs live count mismatches), read that template YAML side-by-side with the dbt lag model and main model.
+
 Check:
 
 - Failed task name and full logs.
 - Whether the DAG is paused.
 - Whether upstream dependencies failed, especially migrations.
-- Whether environment config has the expected checkpoint version.
+- Whether environment config has the expected checkpoint version **for this DAG family** (`entity_live_dags/configs` vs `stateful_changelog_tables/configs`).
+- Whether `parallelism` or `<table>_parallelism_override` changed around the incident window (repartitioning can affect ordering assumptions before `LAG`/changelog UDFs).
 - Whether the DAG was triggered in the expected cluster/region.
 
 For bulk triggering or opening DAGs, use the repo's CLI docs in `cicd/bulk_deploy/trigger_dags.md`.
@@ -120,6 +125,8 @@ Review the relevant Soda check file under:
 
 `transformers/fire/src/soda_quality_checks`
 
+Include **`rcp_team/`** (and paths referenced by `quality_checks/rcp_team_template.yml`) for SCD and cross-table checks—not only `auto_generated_checks/`.
+
 Common incident signals:
 
 - Missing required fields.
@@ -129,8 +136,19 @@ Common incident signals:
 - Stale sync or modified dates.
 - Wrong Snowflake column types.
 - Referential integrity failures.
+- **SCD:** failures on `VALID_FROM`/`VALID_TO`/`IS_CURRENT` schema or type checks; failed rows comparing **source live counts vs SCD non-deleted / current** counts (indicates changelog or assignment grain mismatch).
 
 Use failed row samples to identify affected tenants, pods, orgs, keys, and source records.
+
+### 7b. Stateful Changelog / UDF Layer (When Applicable)
+
+For blacklist/stateful models (e.g. `identity_role_assignment_account_target`):
+
+- **Lag view:** `*_lag.sql` builds prior state with window functions; if Kafka ordering or `procTime` semantics break, diffs explode or go silent.
+- **Changelog UDFs:** `array_diff_changelog` / `map_diff_changelog` emit one row per detected change—misconfigured key paths or sentinel arrays cause missing or duplicate logical assignments.
+- **SCD sink:** Downstream `*_SCD` tables may look wrong while `*_live` still looks plausible—compare team Soda failed-row queries and Snowflake SCD columns.
+
+Correlate with Flink logs for the job name from the stateful template and with checkpoint restore errors after a **checkpoint version** bump.
 
 ### 8. Reconciler And Replay
 
@@ -166,7 +184,8 @@ Before recommending a bump, confirm:
 
 - The job cannot recover from current checkpoint state.
 - Replaying from earliest offset is acceptable for the table.
-- The affected table's checkpoint version exists in env config.
+- The affected table's checkpoint version exists in env config (**correct tree**: `pipelines/dags/entity_live_dip/stateful_changelog_tables/configs/**` vs `entity_live_dags/configs/**`).
+- Parallelism overrides did not change consumer group behavior unexpectedly alongside the bump.
 - The expected blast radius is understood.
 
 ### 10. Report Findings
