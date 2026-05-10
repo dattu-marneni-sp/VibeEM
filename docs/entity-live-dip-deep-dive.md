@@ -1,6 +1,6 @@
-# Entity Live DIP Deep Dive
+# entity-live-dip Deep Analysis
 
-This document summarizes the deeper analysis of `sailpoint/entity-live-dip` in a readable format. The companion visual canvas is stored at `canvases/entity-live-dip-deep-dive.canvas.tsx`.
+This document summarizes the deep analysis of `sailpoint/entity-live-dip` in a readable format. The companion visual canvas is stored at `canvases/entity-live-dip-deep-dive.canvas.tsx`.
 
 ## Mental Model
 
@@ -94,7 +94,7 @@ Use these questions when reviewing `entity-live-dip` changes:
 - Does the PR require checkpoint bumps, migrations, replay, backfill, or coordinated deploy timing?
 - Do Soda checks cover completeness, uniqueness, validity, freshness, and known producer format issues?
 
-## Recommended Next Deep Dives
+## Recommended Next Deep Analysis Steps
 
 1. Compare one generated entity with one blacklisted or custom entity.
 2. Trace one stale-data incident from Airflow to Flink to Kafka to Snowflake to Soda to Reconciler.

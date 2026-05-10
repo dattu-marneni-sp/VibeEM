@@ -187,7 +187,7 @@ export default function EntityLiveDipDeepDive() {
   return (
     <Stack gap={22}>
       <Stack gap={8}>
-        <H1>entity-live-dip Deep Dive</H1>
+        <H1>entity-live-dip Deep Analysis</H1>
         <Text tone="secondary">
           Implementation-level map for reviewing and operating SailPoint's schema-driven Kafka to Flink to Snowflake live table platform.
         </Text>
@@ -316,7 +316,7 @@ export default function EntityLiveDipDeepDive() {
         </Stack>
 
         <Stack gap={12}>
-          <H2>Best Next Deep Dives</H2>
+          <H2>Best Next Analysis Steps</H2>
           <Card>
             <CardHeader>Learning path</CardHeader>
             <CardBody>
