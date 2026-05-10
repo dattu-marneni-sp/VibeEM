@@ -1,0 +1,55 @@
+# Repos Ranked By Deduped PR Count
+
+Source data: `data/repos-ranked-by-deduped-pr-count.tsv`
+
+| Repository | Unique PRs | Distinct Members | GitHub |
+| --- | ---: | ---: | --- |
+| `sailpoint/entity-live-dip` | 117 | 11 | [open](https://github.com/sailpoint/entity-live-dip) |
+| `sailpoint-core/saas-identity-dip` | 113 | 7 | [open](https://github.com/sailpoint-core/saas-identity-dip) |
+| `sailpoint/gitops-k8s` | 110 | 7 | [open](https://github.com/sailpoint/gitops-k8s) |
+| `sailpoint/saas-idn-dip` | 77 | 9 | [open](https://github.com/sailpoint/saas-idn-dip) |
+| `sailpoint/saas_lakehouse_acl` | 72 | 7 | [open](https://github.com/sailpoint/saas_lakehouse_acl) |
+| `sailpoint/gitops-iai` | 60 | 10 | [open](https://github.com/sailpoint/gitops-iai) |
+| `sailpoint/ida-airflow` | 60 | 9 | [open](https://github.com/sailpoint/ida-airflow) |
+| `sailpoint/saas_lakehouse_edm` | 57 | 9 | [open](https://github.com/sailpoint/saas_lakehouse_edm) |
+| `sailpoint/data-platform-admin-dip` | 32 | 9 | [open](https://github.com/sailpoint/data-platform-admin-dip) |
+| `sailpoint/saas-data-platform-base-images` | 31 | 9 | [open](https://github.com/sailpoint/saas-data-platform-base-images) |
+| `sailpoint-core/saas-flink-datastream-dip` | 26 | 7 | [open](https://github.com/sailpoint-core/saas-flink-datastream-dip) |
+| `sailpoint-core/saas-docker-base-images` | 24 | 2 | [open](https://github.com/sailpoint-core/saas-docker-base-images) |
+| `sailpoint/iai-ops` | 22 | 6 | [open](https://github.com/sailpoint/iai-ops) |
+| `sailpoint/saas-airflow-utils` | 16 | 6 | [open](https://github.com/sailpoint/saas-airflow-utils) |
+| `sailpoint-core/dp-activity-data-dip` | 14 | 4 | [open](https://github.com/sailpoint-core/dp-activity-data-dip) |
+| `sailpoint/saas-datapump` | 13 | 4 | [open](https://github.com/sailpoint/saas-datapump) |
+| `sailpoint/gitops-idn` | 11 | 5 | [open](https://github.com/sailpoint/gitops-idn) |
+| `sailpoint-core/saas-idn-backfill` | 9 | 2 | [open](https://github.com/sailpoint-core/saas-idn-backfill) |
+| `sailpoint/ida-harvesters` | 9 | 3 | [open](https://github.com/sailpoint/ida-harvesters) |
+| `sailpoint/saas-airflow` | 9 | 5 | [open](https://github.com/sailpoint/saas-airflow) |
+| `sailpoint/saas-dbt-core` | 6 | 4 | [open](https://github.com/sailpoint/saas-dbt-core) |
+| `sailpoint/saas-machine-account-detection-dip` | 6 | 4 | [open](https://github.com/sailpoint/saas-machine-account-detection-dip) |
+| `sailpoint/tenant-access-controls` | 6 | 3 | [open](https://github.com/sailpoint/tenant-access-controls) |
+| `sailpoint/jenkins-release-utils` | 5 | 2 | [open](https://github.com/sailpoint/jenkins-release-utils) |
+| `sailpoint/ecr-tf` | 4 | 3 | [open](https://github.com/sailpoint/ecr-tf) |
+| `sailpoint/flink-connector-snowflake` | 4 | 3 | [open](https://github.com/sailpoint/flink-connector-snowflake) |
+| `sailpoint/saas-data-platform-utils` | 4 | 4 | [open](https://github.com/sailpoint/saas-data-platform-utils) |
+| `sailpoint/saas-grafana` | 4 | 3 | [open](https://github.com/sailpoint/saas-grafana) |
+| `sailpoint/saas-kafka-artifacts` | 4 | 1 | [open](https://github.com/sailpoint/saas-kafka-artifacts) |
+| `sailpoint-core/saas-entitlement-connection-dip` | 3 | 2 | [open](https://github.com/sailpoint-core/saas-entitlement-connection-dip) |
+| `sailpoint/ida-lakehouse` | 3 | 1 | [open](https://github.com/sailpoint/ida-lakehouse) |
+| `sailpoint/ida-live-dip` | 3 | 3 | [open](https://github.com/sailpoint/ida-live-dip) |
+| `sailpoint-core/saas-management-dip` | 2 | 1 | [open](https://github.com/sailpoint-core/saas-management-dip) |
+| `sailpoint/prometheus-dynamic-config` | 2 | 1 | [open](https://github.com/sailpoint/prometheus-dynamic-config) |
+| `sailpoint/role-propagation-dip` | 2 | 1 | [open](https://github.com/sailpoint/role-propagation-dip) |
+| `sailpoint/saas-dip-template` | 2 | 2 | [open](https://github.com/sailpoint/saas-dip-template) |
+| `sailpoint/shared-signals-dip` | 2 | 2 | [open](https://github.com/sailpoint/shared-signals-dip) |
+| `sailpoint-core/dp-iceberg-poc` | 1 | 1 | [open](https://github.com/sailpoint-core/dp-iceberg-poc) |
+| `sailpoint-core/mantis-platform` | 1 | 1 | [open](https://github.com/sailpoint-core/mantis-platform) |
+| `sailpoint-core/saas-access-profile-dip` | 1 | 1 | [open](https://github.com/sailpoint-core/saas-access-profile-dip) |
+| `sailpoint-core/saas-mis-dip` | 1 | 1 | [open](https://github.com/sailpoint-core/saas-mis-dip) |
+| `sailpoint/arm-reporting` | 1 | 1 | [open](https://github.com/sailpoint/arm-reporting) |
+| `sailpoint/cloud-tools` | 1 | 1 | [open](https://github.com/sailpoint/cloud-tools) |
+| `sailpoint/flink-apps` | 1 | 1 | [open](https://github.com/sailpoint/flink-apps) |
+| `sailpoint/ida-common-dip` | 1 | 1 | [open](https://github.com/sailpoint/ida-common-dip) |
+| `sailpoint/ida-lowsimilarityoutliers-dip` | 1 | 1 | [open](https://github.com/sailpoint/ida-lowsimilarityoutliers-dip) |
+| `sailpoint/ida-peergroupsingest-dip` | 1 | 1 | [open](https://github.com/sailpoint/ida-peergroupsingest-dip) |
+| `sailpoint/my-sailpoint-dip` | 1 | 1 | [open](https://github.com/sailpoint/my-sailpoint-dip) |
+| `sailpoint/sparsejaccard-dip` | 1 | 1 | [open](https://github.com/sailpoint/sparsejaccard-dip) |
