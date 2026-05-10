@@ -1,6 +1,6 @@
 ---
-name: dbt-live-table-review
-description: Reviews dbt live table changes in SailPoint entity-live-dip for generated-file safety, blacklist/stateful changelog customs, Snowflake connector config (including SCD sink strategy), Kafka source consistency, standard platform columns, primary key/grain, type mapping, delete handling, tags, lag views and changelog UDFs, checkpoint/parallelism alignment, team-owned Soda, and validation. Use when reviewing generated or custom dbt models under entity_live_tables.
+name: entity-live-dip-dbt-live-table-review
+description: Entity-live-dip — reviews dbt live table changes in SailPoint entity-live-dip for generated-file safety, blacklist/stateful changelog customs, Snowflake connector config (including SCD sink strategy), Kafka source consistency, standard platform columns, primary key/grain, type mapping, delete handling, tags, lag views and changelog UDFs, checkpoint/parallelism alignment, team-owned Soda, and validation. Use when reviewing generated or custom dbt models under entity_live_tables.
 ---
 
 # dbt Live Table Review

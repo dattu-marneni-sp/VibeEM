@@ -1,6 +1,6 @@
 ---
-name: entity-live-table-onboarding
-description: Guides adding a new live table in SailPoint entity-live-dip from JSON schema through generated dbt models, Airflow/Flink DAG templates, checkpoint config, Soda checks, pre-commit, and CI validation. Use when onboarding a new entity-live-dip live table or explaining the schema-to-CI workflow.
+name: entity-live-dip-entity-live-table-onboarding
+description: Entity-live-dip — guides adding a new live table in SailPoint entity-live-dip from JSON schema through generated dbt models, Airflow/Flink DAG templates, checkpoint config, Soda checks, pre-commit, and CI validation. Use when onboarding a new entity-live-dip live table or explaining the schema-to-CI workflow.
 ---
 
 # Entity Live Table Onboarding

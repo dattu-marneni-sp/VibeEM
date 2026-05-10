@@ -1,6 +1,6 @@
 ---
-name: pipeline-incident-triage
-description: Triage SailPoint entity-live-dip pipeline incidents using an evidence-first workflow across Airflow DAGs, Flink jobs, Kafka topics, Snowflake live/history tables, Soda checks, metrics, checkpoint config, and Reconciler replay. Use when investigating failed, delayed, missing, stale, or inconsistent live table data.
+name: entity-live-dip-pipeline-incident-triage
+description: Entity-live-dip — triage SailPoint entity-live-dip pipeline incidents using an evidence-first workflow across Airflow DAGs, Flink jobs, Kafka topics, Snowflake live/history tables, Soda checks, metrics, checkpoint config, and Reconciler replay. Use when investigating failed, delayed, missing, stale, or inconsistent live table data.
 ---
 
 # Pipeline Incident Triage

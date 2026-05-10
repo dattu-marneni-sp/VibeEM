@@ -1,6 +1,6 @@
 ---
-name: data-quality-review
-description: Reviews SailPoint data platform changes for data quality risks in entity-live-dip and similar pipelines, including schema drift, null handling, uniqueness, key format, missing headers, freshness, referential integrity, type validation, Soda checks, failed-row samples, and downstream contract impact.
+name: entity-live-dip-data-quality-review
+description: Entity-live-dip — reviews SailPoint data platform changes for data quality risks in entity-live-dip and similar pipelines, including schema drift, null handling, uniqueness, key format, missing headers, freshness, referential integrity, type validation, Soda checks, failed-row samples, and downstream contract impact.
 ---
 
 # Data Quality Review
