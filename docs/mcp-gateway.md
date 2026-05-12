@@ -59,6 +59,40 @@ Contrast with alternatives:
 - **Subdomain routing** (`https://acme.mcp.sailpoint.com`): the current SailPoint model; defeats the single-universal-URL goal.
 - **Header-based routing** (`X-Tenant: acme`): easy to spoof unless verified against the token anyway, so JWT-based is the cleaner source of truth.
 
+## MCP Gateway Is Not An API Gateway
+
+A common early instinct is to reuse an existing API gateway (Apigee, Kong, Envoy, etc.) for MCP traffic. This works for the easy parts and breaks down quickly on the hard parts. The core reason is that **APIs are stateless and MCP is stateful**.
+
+### Why The Two Are Different
+
+- **APIs** route on the HTTP layer: method, path, headers, query parameters. Each request is independent. The body is mostly opaque to the gateway.
+- **MCP** routes on the body: every meaningful detail (`method`, tool name, arguments) lives inside a JSON-RPC payload. Sessions are tracked via `Mcp-Session-Id`. A single client `POST /mcp` can produce multiple streamed SSE events back, and servers can initiate messages back to clients (notifications, elicitations, sampling).
+
+In short: an API gateway sees `POST /mcp` and a JSON blob. An MCP gateway has to understand the protocol inside the blob, keep session state, and broker bidirectional streams.
+
+### Spectrum Of MCP Gateway Capabilities
+
+There is a useful ladder of capability — most teams start at the bottom and find they need to climb:
+
+1. **Simple passthrough proxy.** Treats MCP as opaque HTTP. Gives you TLS, JWT validation on the `Authorization` header, basic rate limiting, and request/response logs. Can't inspect tool calls, can't apply policy mid-stream, loses session context across SSE events.
+2. **Partial protocol understanding.** Custom scripts (JS, Lua) parse JSON-RPC and apply tool-level policy ("marketing users can't call `database_query`"). Quickly becomes brittle: every new tool means new gateway policy, performance overhead from scripting, limited streaming support.
+3. **MCP brokering.** Gateway is an active participant in the MCP conversation: protocol version shielding (client speaks v1 while server speaks v2), tool filtering on `tools/list`, response sanitization based on user clearance, context injection (user/tenant), error normalization. Requires native JSON-RPC understanding and session-aware policy.
+4. **MCP multiplexing (virtual MCP server).** One logical endpoint that aggregates many backend MCP servers. Needs session fan-out on `tools/list`, name-based routing on `tools/call`, response merging across SSE streams from multiple backends, cross-backend session and error coordination. This is where traditional API gateways hit a wall.
+
+### Implications For The SailPoint Design
+
+- The currently documented `mcp.sailpoint.com` PRD is mostly **level 1 + a bit of level 2**: validate JWT, route by `tenant_id` claim, forward to a tenant-specific backend. That works for a single-server, single-tenant routing problem.
+- The version Gaurav is asking for almost certainly needs **level 3 and level 4**: brokering (policy, redaction, audit injection, version shielding) and multiplexing across multiple SailPoint MCP backends (ISC tools, workflows, AIS, NERM, possibly third-party MCPs governed under SailPoint identity).
+- Choosing the foundation matters. Building level 3/4 on top of a generic API gateway means continuously fighting the architecture. Purpose-built MCP gateways (e.g. CNCF [agentgateway](https://agentgateway.dev/), AWS Bedrock AgentCore Gateway) start from session-aware, JSON-RPC-native, SSE-aware foundations.
+
+### Decision Hooks To Bring To The Call
+
+- What's the target capability level for v1: passthrough, brokering, or full multiplexing?
+- Build on top of an existing API gateway, adopt a purpose-built MCP gateway (agentgateway, AgentCore), or build new in-house?
+- Where does session state live, and how is it scaled across instances (sticky routing vs. shared store like Redis)?
+- How is tool-level authorization expressed and enforced — at the gateway, at a separate PDP, or inside each backend?
+- What is the contract for backends: do they all speak the same MCP version, or does the gateway broker versions?
+
 ## Examples In The Wild
 
 - **AWS AgentCore Gateway** — AWS's managed MCP gateway and control plane.
@@ -108,6 +142,8 @@ An MCP gateway is the enterprise control plane for AI tool use — a reverse pro
 
 - [Model Context Protocol specification](https://modelcontextprotocol.io)
 - [Anthropic — Introducing the Model Context Protocol](https://www.anthropic.com/news/model-context-protocol)
+- [Christian Posta — MCP vs. API Gateways: They're Not Interchangeable (The New Stack)](https://thenewstack.io/mcp-vs-api-gateways-theyre-not-interchangeable/)
+- [agentgateway (CNCF / Linux Foundation, Rust)](https://agentgateway.dev/)
 - [AWS — Bedrock AgentCore Gateway](https://aws.amazon.com/bedrock/agentcore/)
 - [Atlassian Remote MCP Server announcement](https://www.atlassian.com/blog/announcements/remote-mcp-server)
 - [GitHub MCP Server](https://github.com/github/github-mcp-server)
