@@ -90,9 +90,25 @@ An MCP gateway is the enterprise control plane for AI tool use — a reverse pro
 
 ## References
 
-- `[MCP Q1-2 PRD] SailPoint MCP Server Single URL and OAuth Support` (Confluence)
-- `[HLD] SailPoint MCP Server` (Confluence)
-- `Approved MCP Servers` (Confluence)
-- `MCP Server Request Process` (Confluence)
-- `AI Assistants + MCP servers: Onboarding guide` (Confluence)
+### SailPoint Internal
+
+- [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support)
+- [\[HLD\] SailPoint MCP Server](https://sailpoint.atlassian.net/wiki/spaces/~557058a92a897c42824a4792963165ed4eea38/pages/3670769784/HLD+SailPoint+MCP+Server)
+- [\[Draft\] SailPoint MCP Platform Strategy](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4614226238/Draft+SailPoint+MCP+Platform+Strategy)
+- [Enterprise MCP Server Infrastructure Research](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4631528649/Enterprise+MCP+Server+Infrastructure+Research)
+- [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration)
+- [Approved MCP Servers](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4951474326)
+- [MCP Server Request Process](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4175036476)
+- [AI Assistants + MCP servers: Onboarding guide](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4914413686/AI+Assistants+MCP+servers+Onboarding+guide)
+- [MCP / Agentic Security Policies](https://sailpoint.atlassian.net/wiki/spaces/SEC/pages/4820926587/MCP+Agentic+Security+Policies)
+- [SailPoint MCP Server Announcement](https://sailpoint.atlassian.net/wiki/spaces/PMO/pages/4244439556/SailPoint+MCP+Server+Announcement)
+- Jira epic: [External (Customer-facing) MCP Gateway — AI-881](https://sailpoint.atlassian.net/browse/AI-881)
+
+### External
+
 - [Model Context Protocol specification](https://modelcontextprotocol.io)
+- [Anthropic — Introducing the Model Context Protocol](https://www.anthropic.com/news/model-context-protocol)
+- [AWS — Bedrock AgentCore Gateway](https://aws.amazon.com/bedrock/agentcore/)
+- [Atlassian Remote MCP Server announcement](https://www.atlassian.com/blog/announcements/remote-mcp-server)
+- [GitHub MCP Server](https://github.com/github/github-mcp-server)
+- [AWS Labs MCP Servers](https://github.com/awslabs/mcp)
