@@ -186,6 +186,7 @@ An MCP gateway is the enterprise control plane for AI tool use — a reverse pro
 - [agentgateway (CNCF / Linux Foundation, Rust)](https://agentgateway.dev/)
 - [AWS — Bedrock AgentCore Gateway](https://aws.amazon.com/bedrock/agentcore/)
 - [AWS — Transform your MCP architecture: Unite MCP servers through AgentCore Gateway](https://aws.amazon.com/blogs/machine-learning/transform-your-mcp-architecture-unite-mcp-servers-through-agentcore-gateway/)
+- Video: [Amazon Bedrock AgentCore — Gateway (AWS, 4:29)](https://www.youtube.com/watch?v=B8FCjR8uIBI) — short demo and code walkthrough (create gateway, add Lambda target, MCP `tools/list` / `tools/call`, semantic tool search).
 - [Atlassian Remote MCP Server announcement](https://www.atlassian.com/blog/announcements/remote-mcp-server)
 - [GitHub MCP Server](https://github.com/github/github-mcp-server)
 - [AWS Labs MCP Servers](https://github.com/awslabs/mcp)
