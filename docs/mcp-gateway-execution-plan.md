@@ -1,5 +1,6 @@
 # What is MCP Gateway
 
+As AI agents are adopted at scale, developer teams can create dozens to hundreds of specialized Model Context Protocol (MCP) servers, tailored for specific agent use case and domain, organization functions or teams. Organizations also need to integrate their own existing MCP servers or open source MCP servers for their AI workflows. There is a need for a way to efficiently combine these existing MCP servers–whether custom-built, publicly available, or open source–into a unified interface that AI agents can readily consume and teams can seamlessly share across the organization.
 
 
 1) <img width="1024" height="363" alt="image" src="https://github.com/user-attachments/assets/143b2b34-1c4b-4b1e-86ff-b61efc40d520" />
