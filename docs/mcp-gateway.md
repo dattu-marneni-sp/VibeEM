@@ -93,10 +93,50 @@ There is a useful ladder of capability — most teams start at the bottom and fi
 - How is tool-level authorization expressed and enforced — at the gateway, at a separate PDP, or inside each backend?
 - What is the contract for backends: do they all speak the same MCP version, or does the gateway broker versions?
 
+## Reference Architecture: AWS Bedrock AgentCore Gateway
+
+AWS's AgentCore Gateway is a useful concrete example of a managed MCP gateway because it explicitly implements the brokering and multiplexing patterns described above. The November 2025 update added "MCP server" as a first-class target type, alongside Lambda, OpenAPI, and Smithy targets.
+
+### Core Concepts
+
+- **Gateway.** A single MCP-protocol endpoint that agents connect to.
+- **Targets.** What the gateway exposes as tools. A target can be a Lambda function, an OpenAPI spec, a Smithy model, an MCP server, an AgentCore Runtime instance, or even another AgentCore Gateway (federation).
+- **Inbound auth.** JWT (e.g. Cognito) validated on every client request, decoupled from how the gateway talks to backends.
+- **Outbound auth.** Per-target OAuth credentials managed by AgentCore Identity, fetched fresh at invocation time.
+- **Semantic search.** Embeddings are generated over tool name, description, and parameter descriptions, exposed via a special `x_amz_bedrock_agentcore_search` tool so agents can discover relevant tools across all targets without exact-name matching.
+
+### Tool Schema Synchronization
+
+A nice solution to the "where do tool definitions live" problem:
+
+- **Implicit sync** on `CreateGatewayTarget` / `UpdateGatewayTarget`: gateway calls the backend's `tools/list` and stores normalized definitions before the target is marked `READY`.
+- **Explicit sync** via `SynchronizeGatewayTargets` API for on-demand refresh after backend tool changes.
+- **Cache-first `ListTools`** at request time — no real-time fan-out to backends, so listing is fast and reliable.
+- **Real-time `tools/call`** — actual invocation goes through to the backend with fresh OAuth credentials.
+- **Tool name prefixing** during normalization to prevent collisions across targets.
+
+This is a cleaner pattern than naive multiplexing because it separates the slow path (sync tool catalogs) from the hot path (list/call), and gives operators an explicit moment to validate new schemas.
+
+### Patterns Worth Borrowing Or Contrasting For SailPoint
+
+- **Treat backends as "targets" with a typed contract.** Don't hard-code routing to "tenant X's ISC MCP server" — make backend type a first-class concept (`isc-tenant`, `workflow`, `ais`, `third-party`) so the gateway can grow without protocol rewrites.
+- **Decouple inbound and outbound auth.** Inbound: SailPoint IdP / OAuth. Outbound: per-backend credentials (could be tenant-scoped service tokens, on-behalf-of tokens, or PATs). Match AgentCore's "credential provider" abstraction.
+- **Cache tool definitions; refresh on demand.** Avoid fanning out `tools/list` to every backend on every client connect — it will not scale to dozens of tenants times dozens of tools.
+- **Add a semantic search tool.** Agents lose accuracy as the tool count grows; SailPoint's identity-governance vocabulary is a good fit for embedding-based discovery.
+- **Allow gateway-of-gateways (federation).** Lets internal SailPoint AI use cases and external customer-facing MCP traffic share a control plane without merging into one giant tool list.
+- **Watch the statefulness trap.** AgentCore's sample MCP server uses `stateless_http=True`. SailPoint will need to decide whether tenant backends are stateless (easy to scale, lose MCP session features) or stateful (richer protocol, requires sticky routing or shared session store).
+
+### Caveats
+
+- AgentCore Gateway is AWS-managed and Bedrock-coupled. Adopting it means accepting AWS as the control plane for SailPoint's agentic surface, which has data-residency, FedRAMP, and pricing implications.
+- The cache-first `ListTools` model trades freshness for performance — fine for tools that change rarely, but the team should pick an explicit sync cadence.
+- Federation across gateways simplifies organization but adds a hop of latency and another auth boundary.
+
 ## Examples In The Wild
 
-- **AWS AgentCore Gateway** — AWS's managed MCP gateway and control plane.
-- **TrueFoundry, agentgateway, MCP-Cloud, IBM** — vendor offerings.
+- **AWS Bedrock AgentCore Gateway** — managed MCP gateway and control plane; supports MCP servers, Lambda, OpenAPI, Smithy, and federation as target types.
+- **agentgateway** — CNCF / Linux Foundation, Rust, purpose-built for MCP and A2A; pairs with kgateway for Kubernetes-native control plane.
+- **TrueFoundry, MCP-Cloud, IBM** — other vendor offerings.
 - **Atlassian Remote MCP, GitHub Copilot MCP, Linear MCP** — single-URL SaaS gateways in front of per-tenant backends.
 - **SailPoint `mcp.sailpoint.com`** — in-progress design fronting per-tenant ISC MCP servers.
 
@@ -145,6 +185,7 @@ An MCP gateway is the enterprise control plane for AI tool use — a reverse pro
 - [Christian Posta — MCP vs. API Gateways: They're Not Interchangeable (The New Stack)](https://thenewstack.io/mcp-vs-api-gateways-theyre-not-interchangeable/)
 - [agentgateway (CNCF / Linux Foundation, Rust)](https://agentgateway.dev/)
 - [AWS — Bedrock AgentCore Gateway](https://aws.amazon.com/bedrock/agentcore/)
+- [AWS — Transform your MCP architecture: Unite MCP servers through AgentCore Gateway](https://aws.amazon.com/blogs/machine-learning/transform-your-mcp-architecture-unite-mcp-servers-through-agentcore-gateway/)
 - [Atlassian Remote MCP Server announcement](https://www.atlassian.com/blog/announcements/remote-mcp-server)
 - [GitHub MCP Server](https://github.com/github/github-mcp-server)
 - [AWS Labs MCP Servers](https://github.com/awslabs/mcp)
