@@ -1,3 +1,6 @@
+# What is MCP Gateway
+<img width="794" height="454" alt="image" src="https://github.com/user-attachments/assets/7ed9ebb1-fb3b-4b4d-be89-e1f1f313a86a" />
+
 # MCP Gateway — Execution Plan
 
 This is an EM-level execution plan for delivering a SailPoint MCP gateway built on **AWS Bedrock AgentCore Gateway** as the managed service foundation, satisfying the FRs and NFRs in:
