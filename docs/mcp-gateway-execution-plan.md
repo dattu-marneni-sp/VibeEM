@@ -1,9 +1,14 @@
 # What is MCP Gateway
+
+
+
 1) <img width="1024" height="363" alt="image" src="https://github.com/user-attachments/assets/143b2b34-1c4b-4b1e-86ff-b61efc40d520" />
 
 2) <img width="1024" height="499" alt="image" src="https://github.com/user-attachments/assets/089ed969-93be-4dc0-90af-2851a600e108" />
 
 3) <img width="794" height="454" alt="image" src="https://github.com/user-attachments/assets/7ed9ebb1-fb3b-4b4d-be89-e1f1f313a86a" />
+
+   
 
 # MCP Gateway — Execution Plan
 
