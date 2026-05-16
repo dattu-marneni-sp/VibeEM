@@ -29,9 +29,114 @@ Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/IN
 - **What we're building.** A single, tenant-agnostic MCP endpoint for SailPoint, fronted by AWS Bedrock AgentCore Gateway, that routes authenticated MCP traffic to the correct tenant's ISC backend and provides centralized auth, tool discovery, telemetry, and policy.
 - **Why now.** Per-tenant URLs block AWS Marketplace listing, "one-click install" in Cursor / Claude / VS Code, and competitive parity with Saviynt and Wiz, who already shipped marketplace MCP listings in mid-2025. Two PRDs already exist and the team is ready to start.
 - **Approach.** Buy the gateway plane (AgentCore Gateway, AgentCore Identity), build the SailPoint-specific glue (tenant routing, client mapping, admin UI integration, telemetry pipeline). Avoid building a JSON-RPC / SSE proxy from scratch.
-- **Headcount ask.** Recommended team: 1 EM, 1 tech lead, 3–4 backend engineers (1 with AWS depth, 1 with identity/OAuth depth), 1 SRE/DevOps, 0.5 SDET, with shared support from existing OAuth (Rahul Mishra), UI (Ben Coble), and Docs teams.
-- **Timeline shape.** Phase 0 design + reconciliation (3 weeks) → Phase 1 PoC (6 weeks) → Phase 2 MVP (8–10 weeks) → Phase 3 closed beta (4 weeks) → Phase 4 GA (4 weeks). Total \~6 months from kickoff to GA for the P0 scope; Phase II features (DCR, dev portal, tool namespacing) follow after GA.
-- **Risks to flag now.** Two PRDs disagree on URL and OAuth model; AgentCore is AWS-coupled (data residency, FedRAMP); bedrock-agentcore-control APIs are new and still evolving.
+- **Target plan (this team).** **4-week MVP** with **2–3 engineers** using **Cursor + AI models** for IaC, tests, docs, and integration glue. Role split and week-by-week plan: [§ Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted). Delivers **internal-pilot-ready** gateway (E2E universal URL + OAuth + routing + thin observability); **not** full GA, marketplace, or every P0 NFR at production scale in four weeks.
+- **Baseline plan (leadership / GA).** **~6 months** with **6 engineers + EM** (Option B below): Phase 0 (3 wk) → PoC (6 wk) → MVP (8–10 wk) → closed beta → GA. Use when the ask is production GA, FedRAMP path, full ISC Admin UI, and full NFR sign-off.
+- **Risks to flag now.** Two PRDs disagree on URL and OAuth model; AgentCore is AWS-coupled (data residency, FedRAMP); bedrock-agentcore-control APIs are new and still evolving. Accelerated timeline **requires** Week-1 PM/OAuth decisions and descoping FR7 UI + Snowflake CDC.
+
+---
+
+## Accelerated MVP — 4 weeks, 2–3 engineers (Cursor-assisted)
+
+**Intent:** Ship a **working, demonstrable MCP gateway** in one sprint month: universal URL, OAuth/JWT, tenant routing, `tools/list` / `tools/call` from Cursor, minimal ops visibility. Align with existing platform work ([APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990), [SAASSRE-6461](https://sailpoint.atlassian.net/browse/SAASSRE-6461), [SAASSIGMA-6213](https://sailpoint.atlassian.net/browse/SAASSIGMA-6213)) instead of re-building DNS/gateway plumbing in parallel.
+
+**What “MVP in 4 weeks” means**
+
+| In scope (week 4 exit) | Deferred (weeks 5–12 or baseline plan) |
+| --- | --- |
+| PRD decisions D1–D7 locked in **week 1** (not a 3-week Phase 0) | FedRAMP / UAE1 regions |
+| AgentCore Gateway + IaC in dev/stage; reuse platform DNS/TLS where possible | Full **ISC Admin UI** for MCP clients (FR7) |
+| SailPoint OAuth + PKCE; JWT authorizer; token-expired UX (FR2, FR5) | **Snowflake** mapping CDC + analytics (FR9) — CloudWatch first |
+| `client_id → tenant_id` store + routing to ISC tenant MCP (FR3, FR4, FR8) | **1M req/month** load proof (NFR-005) — smoke at 50–100 concurrent |
+| Universal URL + client docs for **Cursor + Claude Desktop** (FR1) | Closed beta **5–10 tenants** (Phase 3) |
+| Structured errors + `/health` (FR11); JSON request logs, no tokens in logs (FR12) | Full Grafana suite + Snowflake dashboards (FR10) |
+| Backward-compat **smoke** on 1–2 legacy tenant URLs (FR6) | AWS Marketplace listing |
+| Admin: **CLI or internal API** to register clients (FR7 minimum) | DCR, developer portal (Phase II) |
+| Threat model + routing fuzz tests (security gate before “done”) | Full SRE ORR + on-call (baseline MVP exit) |
+
+Canonical acceptance criteria remain in [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md); the table above is **scope negotiation** for the compressed schedule.
+
+### Who does what (2–3 engineers + EM)
+
+Assume **~0.5 EM** (you) for decisions, dependencies, and demos; **2 FTE builders** minimum; **+1 FTE** strongly recommended for tests/docs/telemetry so platform and identity engineers are not the only testers.
+
+| Role | Person (fill in) | Primary ownership | Jira epics | How Cursor / models help |
+| --- | --- | --- | --- | --- |
+| **EM / coordinator** | _TBD_ | Week-1 decision workshop; OAuth/UI/SRE dependency dates; weekly demo; acceptance sign-off against MVP spec §14 | [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) kickoff | PRD diff summaries, epic/story breakdown, status reports, Confluence-ready decision log |
+| **Eng 1 — Platform / AgentCore** | _TBD_ | IaC (Terraform/CDK), AgentCore gateway + targets, tenant routing, mapping store, error/health Lambda, perf smoke | [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781), [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770), [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771), [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776), [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778), [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) (smoke only) | Generate IaC modules, routing Lambda, contract tests, runbooks; iterate on AgentCore API from AWS docs in-repo |
+| **Eng 2 — Identity / integration** | _TBD_ | OAuth/JWT authorizer, PKCE with MCP clients, scopes, token-expired envelope, E2E client config (FR1 path) | [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769), [DPDE-1772](https://sailpoint.atlassian.net/browse/DPDE-1772), [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) | JWKS/authorizer config drafts, integration test scaffolding, Cursor/Claude Desktop config snippets |
+| **Eng 3 — Quality / DX** _(optional but recommended)_ | _TBD_ | Request logging pipeline (thin), compat harness, admin registration CLI/API, setup docs | [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779), [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773), [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782), [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) (CLI not UI), [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) (basic alarms) | k6/Locust scripts, markdown docs, OpenAPI for mapping CRUD, redaction checklist |
+
+**Shared / not on the 2–3 FTE hook** (must be calendar-bound in week 1):
+
+| Partner | Delivers | Blocks |
+| --- | --- | --- |
+| **Rahul Mishra / OAuth** | Issuer, JWKS, static client registration, scopes | Eng 2 — entire hot path |
+| **Ben Coble / UI** | FR7 **only** if leadership insists on Admin UI in 4 weeks; otherwise API contract for CLI | Eng 3 — admin flows |
+| **SRE / APIMGMT / SAASSRE** | Global URL, DNS, CloudFront, sp-gateway alignment | Eng 1 — FR1 TLS hostname |
+| **ISC / Masala** | Stable tenant MCP backend URL + test tenant | E2E demo |
+| **Security** | 2–4 hr threat-model review + sign-off on routing tests | Week 4 “done” |
+| **Data Platform** | Snowflake path | Post–week 4 (FR9) |
+
+### Four-week calendar
+
+```
+Week:     1                    2                    3                    4
+          |--------------------|--------------------|--------------------|--------------------|
+Eng 1     | IaC + AgentCore    | Targets + routing  | Mapping + errors   | Perf smoke + fixes |
+          | spike (reuse       | + mapping v0       | + log shipping     | + handoff runbook  |
+          | APIMGMT work)      |                    | (CW)               |                    |
+Eng 2     | OAuth/JWT spike    | PKCE E2E Cursor    | Multi-tenant +     | Token UX + sec     |
+          | + D1–D7 decisions  | tools/list,call    | revoke + 401/403   | test fixes         |
+Eng 3     | Compat harness     | Admin CLI/API      | Docs draft         | NFR-011 timed test |
+(or EM)   | skeleton           | + FR6 smoke        | Cursor+Claude      | + demo recording   |
+All       | Demo: skeleton     | Demo: 1 tenant E2E | Demo: 2 tenants    | Demo: MVP checklist|
+```
+
+**Week 1 — Lock & spike (no multi-week Phase 0)**
+
+- **Days 1–2:** Decision meeting (D1–D7 in [`mcp-gateway-mvp-spec.md` §4](mcp-gateway-mvp-spec.md#4-prd-reconciliation--decisions-required)); assign Eng 1/2/3; confirm reuse of in-flight APIMGMT/SRE AgentCore + DNS work.
+- **Days 3–5:** Parallel spikes — AgentCore + one target (Eng 1); OAuth authorizer + JWKS (Eng 2); repo scaffold, CI, compat test skeleton (Eng 3 or Cursor agent).
+- **Exit:** One `tools/list` through gateway in dev with **hardcoded** tenant mapping (acceptable for spike only).
+
+**Week 2 — One tenant end-to-end**
+
+- Eng 1: Mapping store (DynamoDB preferred for speed) + target wiring.
+- Eng 2: PKCE flow in Cursor; `tools/call` on one real ISC tenant.
+- Eng 3: CloudWatch structured logs; start FR1 quickstart doc.
+- **Exit:** Demo from Cursor using universal URL + `client_id` (record for stakeholders).
+
+**Week 3 — Harden path & admin without UI**
+
+- Eng 1: Routing cache, error envelope, `/health`; negative routing tests.
+- Eng 2: Revoked client, expired token, scope gaps.
+- Eng 3: Admin **CLI/API** for client + mapping CRUD; backward-compat smoke vs legacy tenant URL.
+- **Exit:** Second tenant on same gateway; zero cross-tenant failures on fuzz suite.
+
+**Week 4 — Pilot-ready package**
+
+- Thin dashboards/alarms (CloudWatch; defer Snowflake/Grafana depth).
+- Docs: Cursor + Claude Desktop only (VS Code best-effort).
+- Security review + MVP spec §14 checklist (honest exceptions documented).
+- **Exit:** “Internal pilot ready” — **not** GA. Schedule beta (baseline Phase 3) if leadership agrees.
+
+### Cursor / AI working agreements (make the 4-week plan credible)
+
+- **Single repo** (or mono-folder) with `AGENTS.md` / rules: stack (CDK/Terraform, Python/TS), AgentCore patterns, “no tenant id in URL” invariant.
+- **AI generates; humans review:** IaC, tests, and docs — **not** routing/security logic without review.
+- **Daily:** Each engineer lands one vertical slice (test included); use Cursor Agent for boilerplate, Composer for cross-file refactors.
+- **Pre-baked prompts:** “Add contract test for 401 envelope,” “Generate k6 smoke for tools/list,” “Draft Cursor mcp.json for gateway URL.”
+- **Do not AI-scope creep:** No multiplexing, no semantic search, no FedRAMP — explicit in rules file.
+
+### Accelerated vs baseline timeline
+
+| Milestone | Accelerated (2–3 eng + Cursor) | Baseline Option B |
+| --- | --- | --- |
+| Technical MVP (internal pilot) | **4 weeks** | ~19 weeks (P0+P1+P2 start) |
+| Full P0 FR/NFR + ORR | Weeks 5–10 (follow-on) | Week ~19 |
+| Closed beta | Week ~12+ | Week ~23 |
+| GA + marketplace | Week ~16+ | Week ~27 |
+
+---
 
 ## Key Caveat: The Two PRDs Disagree
 
@@ -75,7 +180,9 @@ This is the build-vs-buy table, which directly informs the workstream breakdown.
 
 The honest read: AgentCore covers the heavy lifting on the gateway plane (protocol, auth scaffolding, scale, observability primitives). The SailPoint-specific work concentrates on **identity integration, client/tenant mapping, admin UX, telemetry pipeline, and FedRAMP / UAE1 strategy**.
 
-## Phased Execution Plan
+## Phased Execution Plan (baseline — ~6 months)
+
+> **Active target for a 2–3 engineer squad:** use [Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) above. The phases below are the **full-program** sequencing (Option B).
 
 ### Phase 0 — Reconciliation & Design (3 weeks)
 
@@ -411,9 +518,23 @@ These items are **explicitly deferred** in PRD 1 and PRD 2; they get their own p
 | WS-H Documentation | Tech writing, DevRel | Cursor / Claude / VS Code MCP client experience |
 | Cross-cutting | AWS IaC (Terraform / CDK), CI/CD, threat modeling, cost engineering | Incident response, on-call |
 
-## Team Shape — Three Staffing Options
+## Team Shape — Staffing Options
 
 These are starting points to pitch to leadership. All assume some shared support from OAuth, UI, and Docs teams.
+
+### Option D — Accelerated MVP (2–3 engineers + EM, Cursor-assisted) **← current target**
+
+| Role | Count | Notes |
+| --- | --- | --- |
+| EM (part-time) | 0.5 | Decisions, dependencies, demos — not a third builder |
+| Platform / AgentCore engineer | 1 | Must-own IaC + routing |
+| Identity / OAuth engineer | 1 | Must-own authorizer + client E2E |
+| Quality / DX engineer | 0–1 | Strongly recommended; else EM + Eng 1 absorb tests/docs |
+
+- **Timeline:** **4 weeks** to internal-pilot MVP; **+6–8 weeks** recommended for full P0 NFRs, ISC Admin UI, Snowflake, beta (if leadership wants production-grade without adding headcount).
+- **Cursor / models:** Treat as **~1.3–1.5× effective throughput** on IaC, tests, and docs — **not** on OAuth policy, security sign-off, or cross-team calendar slips.
+- **Who does what:** [§ Accelerated MVP — Who does what](#who-does-what-2–3-engineers--em)
+- **Risk:** Two engineers without Eng 3 → docs and compat slip; FR7 UI in 4 weeks is **not realistic** without Ben Coble’s team dedicated.
 
 ### Option A — Lean (4 engineers + EM)
 
@@ -441,6 +562,17 @@ Hits the \~6 month GA target, leaves capacity for Phase II planning in parallel.
 Adds a dedicated SRE, full-time SDET, and a second backend on routing/perf. Use only if leadership wants to pull GA in by 4–6 weeks or do FedRAMP in parallel.
 
 ## Timeline Snapshot
+
+**Accelerated (2–3 eng + Cursor):**
+
+```
+Week:        1         2         3         4         5-12
+Phase:       |decisions| 1-tenant | harden  | pilot   | full P0 + beta
+             |+ spikes | E2E      | +admin  | package | (baseline depth)
+Outputs:     HLD-lite  demo       2 tenants docs     GA path
+```
+
+**Baseline (Option B — ~6 months to GA):**
 
 ```
 Week:        0    3    6    9    12   15   18   21   24
@@ -569,6 +701,7 @@ Outputs: HLD  PoC       MVP              Beta  GA
 
 **Anticipated questions.**
 - *"Can we skip Phase 0 and start building?"* No. The two PRDs disagree on what URL to ship. Building before that decision is locked is throwaway work.
+- *"Can we do MVP in 4 weeks with 2–3 people?"* Yes for **internal-pilot** scope with Cursor-assisted delivery — see [Accelerated MVP](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted). Not for full GA, marketplace, ISC Admin UI, or all NFRs at scale.
 - *"Can we compress to 4 months?"* Yes with Option C staffing or by descoping the admin portal (FR7) to a CLI tool in MVP. Either is worth discussing.
 - *"What slips first if we're behind?"* WS-C (admin portal) → CLI fallback. WS-G (perf tuning) → ship at higher latency, fix in patch. WS-H (docs) → cover only Cursor + Claude Desktop in launch.
 
@@ -576,13 +709,16 @@ Outputs: HLD  PoC       MVP              Beta  GA
 
 **On the slide:**
 
-| Option | Team | GA target | Risk profile |
-| --- | --- | --- | --- |
-| A — Lean | 4 eng + EM | 7–8 months | Single points of failure |
-| **B — Recommended** | **6 eng + EM** | **\~6 months** | **Balanced** |
-| C — Aggressive | 8 eng + EM | 4–5 months or parallel FedRAMP | High change cost if scope shifts |
+| Option | Team | MVP (technical) | GA target | Risk profile |
+| --- | --- | --- | --- | --- |
+| **D — Accelerated** | **2–3 eng + 0.5 EM + Cursor** | **4 weeks** (internal pilot) | **~4–5 months** (with follow-on hardening) | Partner calendars; no UI in 4 wk |
+| A — Lean | 4 eng + EM | ~15 weeks | 7–8 months | Single points of failure |
+| B — Full program | 6 eng + EM | ~19 weeks | **\~6 months** | **Balanced for GA** |
+| C — Aggressive | 8 eng + EM | ~12 weeks | 4–5 months or parallel FedRAMP | High change cost if scope shifts |
 
-Recommend Option B. Composition: 1 EM, 1 staff/tech lead, 1 senior backend (routing/AgentCore), 1 senior identity engineer (OAuth), 1 backend (telemetry/Snowflake), 1 frontend (or borrowed from UI team), 0.5 SDET, 0.5 SRE. Plus shared support from OAuth (Rahul Mishra), UI (Ben Coble), Docs.
+**Recommend for this squad:** Option **D** for the first demoable gateway in 4 weeks; explicitly plan **weeks 5–12** (same 2–3 eng or add 1–2) to reach baseline MVP exit in [`mcp-gateway-mvp-spec.md` §14](mcp-gateway-mvp-spec.md#14-mvp-exit-criteria-closed-beta-ready), or switch to Option **B** if leadership requires GA in one funding tranche.
+
+Option B composition: 1 EM, 1 staff/tech lead, 1 senior backend (routing/AgentCore), 1 senior identity engineer (OAuth), 1 backend (telemetry/Snowflake), 1 frontend (or borrowed from UI team), 0.5 SDET, 0.5 SRE. Plus shared support from OAuth (Rahul Mishra), UI (Ben Coble), Docs.
 
 **Speaker notes.**
 - Option B is the lowest-regret choice: it hits the natural 6-month GA window and leaves capacity for Phase II planning to start in parallel from month 4.

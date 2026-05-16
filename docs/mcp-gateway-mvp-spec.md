@@ -561,9 +561,10 @@ Exact claim names **locked with OAuth team** in PoC.
 
 | Phase | Duration | Goal | MVP spec gate |
 | --- | --- | --- | --- |
-| **0 — Spec & design** | 3 weeks | This doc + HLD signed; PRD decisions D1–D7 | **Exit: all Required decisions approved** |
-| **1 — PoC** | 6 weeks | One tenant E2E; AgentCore + domain + OAuth spike | Validates D9, D10 |
-| **2 — MVP build** | 8–10 weeks | FR1–FR12, P0 NFRs | Workstreams WS-A–H |
+| **Accelerated** | **4 weeks** | Internal-pilot gateway (2–3 eng + Cursor); see [execution plan § Accelerated MVP](mcp-gateway-execution-plan.md#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) | Descoped FR7 UI, FR9 Snowflake, full NFR load |
+| **0 — Spec & design** | 3 weeks (baseline) | This doc + HLD signed; PRD decisions D1–D7 | **Exit: all Required decisions approved** |
+| **1 — PoC** | 6 weeks (baseline) | One tenant E2E; AgentCore + domain + OAuth spike | Validates D9, D10 |
+| **2 — MVP build** | 8–10 weeks (baseline) | FR1–FR12, P0 NFRs | Workstreams WS-A–H |
 | **3 — Closed beta** | 4 weeks | 5–10 tenants; go/no-go week 2 | SC-3 |
 | **4 — GA** | 4 weeks | Production + marketplace (if in GA scope) | SC-1–SC-5 sustained |
 
