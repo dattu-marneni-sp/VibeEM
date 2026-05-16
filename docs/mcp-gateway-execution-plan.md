@@ -9,6 +9,9 @@ As AI agents are adopted at scale, developer teams can create dozens to hundreds
 
 3) <img width="794" height="454" alt="image" src="https://github.com/user-attachments/assets/7ed9ebb1-fb3b-4b4d-be89-e1f1f313a86a" />
 
+4) <img width="2050" height="1064" alt="image" src="https://github.com/user-attachments/assets/95294bcd-7da4-4ad3-8875-f5e329ca5095" />
+
+
    
 
 # MCP Gateway — Execution Plan
