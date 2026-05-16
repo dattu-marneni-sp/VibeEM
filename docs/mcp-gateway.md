@@ -151,6 +151,59 @@ There are two existing internal documents that describe the early thinking, both
 
 The current state of the approved MCP server list points to a tenant-specific endpoint (for example `https://adi-01.api.cloud.sailpoint.com/v2025/access-requests/mcp`) rather than a universal gateway URL. The universal gateway is still draft or design-stage, and the new ask is to build something that supersedes both of the above.
 
+## Related Repositories
+
+Internal codebases that overlap with the MCP gateway initiative ([INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)). Full MVP scope and Jira mapping: [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md).
+
+### [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) (`sailpoint-core`)
+
+**What it is.** A reference deployment of **AWS Bedrock AgentCore Gateway** plus a **Policy Decision Point (PDP)** — a Python Lambda **interceptor** on the REQUEST and RESPONSE path. Today it **audit-logs** full MCP payloads to CloudWatch (sensitive headers redacted) and **passes traffic through unchanged**. Extension hooks in `interceptor/hooks.py` are stubs for future **allow/deny, redaction, and enrichment**.
+
+**What it is not.** The customer-facing SailPoint universal gateway (`mcp.sailpoint.com`): no SailPoint OAuth productization, no `client_id → tenant_id` routing, no ISC tenant MCP backends, no ISC Admin client registration.
+
+**Layout.**
+
+| Path | Role |
+| --- | --- |
+| `terraform/` | Gateway, PDP Lambda, IAM, CloudWatch log groups, optional MCP targets |
+| `interceptor/lambda_handler.py` | REQUEST vs RESPONSE dispatch, audit JSON, hook calls |
+| `interceptor/hooks.py` | `process_request` / `process_response` (default: identity) |
+
+**Default demo targets** (optional Terraform vars): GitHub Copilot MCP, Atlassian Remote MCP — useful to prove **multiplexing** and Cursor wiring, not SailPoint tenants.
+
+**How it maps to DPDE epics**
+
+| Epic | Relationship |
+| --- | --- |
+| [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) Foundation / PoC | **Largely de-risked** — AgentCore Gateway + Terraform + interceptor pattern exist; extend for SailPoint envs and targets |
+| [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) FR3 `tools/list` & `tools/call` | **Partially de-risked** — MCP protocol path works with external MCP targets; **net-new** for ISC tenant backends |
+| [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779) FR12 Request logging | **Partially de-risked** — structured request/response audit to CloudWatch; **net-new** for Snowflake pipeline, SailPoint field schema, PII sign-off |
+| [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778) FR11 Errors & health | **Net-new** — PDP does not implement `{error, message, request_id}` envelope or `/health` |
+| [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) FR2 OAuth / JWT | **Pattern only** — repo supports `CUSTOM_JWT` or `AWS_IAM`; **net-new** to wire SailPoint OAuth, PKCE, scopes |
+| [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) FR4 Routing | **Net-new** — no tenant routing; demo routes to GitHub/Atlassian URLs |
+| [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) FR8 Mapping store | **Net-new** |
+| [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) FR7 Admin / CLI | **Net-new** |
+| [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) FR1 Universal URL | **Net-new** for `mcp.sailpoint.com` DNS/TLS and SailPoint client docs; reuse only the generic “point Cursor at `gateway_url`” flow |
+| [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) FR6 Backward compat | **Net-new** |
+| [DPDE-1774](https://sailpoint.atlassian.net/browse/DPDE-1774) FR9 Snowflake | **Net-new** |
+| [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) FR10 Dashboards | **Net-new** (beyond basic CloudWatch logs) |
+| [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) NFR validation | **Net-new** at SailPoint scale |
+| [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) Docs / GA | **Net-new** for SailPoint quickstarts |
+
+**Recommended use for the 4-week accelerated plan.** Fork or extend this repo for **Eng 1 (Platform)** instead of greenfield AgentCore Terraform. Add SailPoint targets, `CUSTOM_JWT`, custom domain (coordinate [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990), [SAASSRE-6461](https://sailpoint.atlassian.net/browse/SAASSRE-6461)), and implement policy in `hooks.py` when security is ready.
+
+**AWS docs.** [Gateway interceptors](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors.html) · [Interceptor payload types](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors-types.html) · [MCP server targets](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-target-MCPservers.html)
+
+### Other in-flight work (coordinate, not duplicate)
+
+| Item | Role |
+| --- | --- |
+| [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990) | AgentCore MCP Gateway setup (us-east-1) |
+| [SAASSIGMA-6213](https://sailpoint.atlassian.net/browse/SAASSIGMA-6213) | Lambda interceptor testing |
+| [SAASSRE-6461](https://sailpoint.atlassian.net/browse/SAASSRE-6461) | Global OAuth/MCP URLs — DNS, CloudFront, sp-gateway |
+| [APIMGMT-1699](https://sailpoint.atlassian.net/browse/APIMGMT-1699) | sp-gateway MCP and global URL support |
+| [AI-881](https://sailpoint.atlassian.net/browse/AI-881) | External (customer-facing) MCP Gateway (on hold) |
+
 ## One-Line Definition
 
 An MCP gateway is the enterprise control plane for AI tool use — a reverse proxy for MCP that adds identity, routing, policy, and observability so that "let an agent use our tools" becomes a governed product instead of a free-for-all.
@@ -179,6 +232,7 @@ An MCP gateway is the enterprise control plane for AI tool use — a reverse pro
 - [MCP / Agentic Security Policies](https://sailpoint.atlassian.net/wiki/spaces/SEC/pages/4820926587/MCP+Agentic+Security+Policies)
 - [SailPoint MCP Server Announcement](https://sailpoint.atlassian.net/wiki/spaces/PMO/pages/4244439556/SailPoint+MCP+Server+Announcement)
 - Jira epic: [External (Customer-facing) MCP Gateway — AI-881](https://sailpoint.atlassian.net/browse/AI-881)
+- GitHub: [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) — AgentCore Gateway + PDP audit interceptor (see [Related Repositories](#related-repositories))
 
 ### External
 

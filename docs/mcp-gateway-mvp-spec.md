@@ -128,6 +128,8 @@ All epics are type **Epic**, project **DPDE**, component **DP-SAF**, labels **`I
 
 **Related work (coordinate, not INIT epic set):** APIMGMT-1990, SAASSIGMA-6213, SAASSRE-6461, APIMGMT-1699, AI-881.
 
+**Related repo:** [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) — AgentCore Gateway + audit interceptor PDP; de-risks [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) / partial FR3 & FR12. See [`mcp-gateway.md` § Related Repositories](mcp-gateway.md#related-repositories).
+
 ---
 
 ## 5. User personas and journeys
