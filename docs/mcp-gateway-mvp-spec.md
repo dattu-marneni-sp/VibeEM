@@ -1,7 +1,7 @@
 # MCP Gateway — MVP Specification
 
 **Status:** Draft — pending PM/OAuth/Security sign-off  
-**Version:** 0.1  
+**Version:** 0.2  
 **Last updated:** 2026-05-16  
 **Owner:** Dattu Marneni (EM)  
 **Initiative:** [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)  
@@ -17,6 +17,8 @@ The MCP Gateway MVP delivers a **single, tenant-agnostic MCP endpoint** for Sail
 **Foundation:** AWS Bedrock **AgentCore Gateway** for the managed gateway plane (protocol, auth scaffolding, scale). SailPoint builds the glue: custom domain, SailPoint OAuth integration, `client_id → tenant_id` mapping, admin registration UX, telemetry, and policy.
 
 **MVP exit:** All **P0** functional requirements (FR1–FR12) and non-functional requirements (NFRs) satisfied in **one primary commercial region**, ready for **closed beta** (5–10 tenants). General availability (GA) and AWS Marketplace listing follow in a subsequent phase.
+
+**Jira:** 16 epics in **DPDE** under initiative [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704) (labels `INIT-2704`, `mcp-gateway`, component **DP-SAF**). See [§4.1 Jira epic index](#41-jira-epic-index).
 
 ---
 
@@ -93,6 +95,38 @@ Two PRDs exist; **MVP cannot start build** until the rows marked **Required** ar
 | D10 | Target model | — | — | **One AgentCore target per tenant** *or* one target + routing Lambda — **decide in PoC** | Spike in PoC |
 
 **Sign-off meeting (week 1):** Ye Zhu (PM), Rahul Mishra (PM / OAuth), Dave Owens (Masala EM), Ben Coble (UI), Security delegate, SRE delegate.
+
+---
+
+### 4.1 Jira epic index
+
+All epics are type **Epic**, project **DPDE**, component **DP-SAF**, labels **`INIT-2704`** and **`mcp-gateway`**. Parent initiative: [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704).
+
+| Key | Scope | MVP spec |
+| --- | --- | --- |
+| [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) | Understanding and kickoff (Phase 0 program) | §11 Phase 0 |
+| [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) | Universal endpoint & client configuration | **FR1** |
+| [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) | OAuth / JWT authorizer | **FR2** |
+| [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) | `tools/list` & `tools/call` | **FR3** |
+| [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) | Tenant routing & targets | **FR4** |
+| [DPDE-1772](https://sailpoint.atlassian.net/browse/DPDE-1772) | Token expiration & auth failure UX | **FR5** |
+| [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) | Backward compatibility & migration | **FR6** |
+| [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) | Admin Portal MCP client registration | **FR7** |
+| [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) | `client_id` → `tenant_id` mapping store | **FR8** |
+| [DPDE-1774](https://sailpoint.atlassian.net/browse/DPDE-1774) | Snowflake mapping exposure | **FR9** |
+| [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) | Usage dashboards & alarms | **FR10** |
+| [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778) | Structured errors & health | **FR11** |
+| [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779) | Structured request logging | **FR12** |
+| [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) | NFR validation, security & cost | **§8 NFRs** |
+| [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) | Foundation: Phase 0 design & Phase 1 PoC | §11 Phase 0–1 |
+| [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) | Documentation, DX & GA launch | WS-H / §11 Phase 4 |
+
+**Duplicates / hygiene**
+
+- [AI-1415](https://sailpoint.atlassian.net/browse/AI-1415) — **Closed**; wrong project duplicate of FR1. Canonical FR1: **DPDE-1768**.
+- **DPDE-1767** — Program kickoff; trim duplicate FR1 acceptance text from its description if still present (FR1 lives on **DPDE-1768**).
+
+**Related work (coordinate, not INIT epic set):** APIMGMT-1990, SAASSIGMA-6213, SAASSRE-6461, APIMGMT-1699, AI-881.
 
 ---
 
@@ -208,7 +242,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR1 — Universal endpoint and client configuration
 
-**MVP** · Jira: [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767)
+**MVP** · Jira: [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768)
 
 **Description:** Canonical universal MCP gateway base URL (and `/latest` if required), public DNS/TLS, validated configuration for Cursor, Claude Desktop, Claude Code, and VS Code. Developers need **only** gateway URL + `client_id` (no tenant in URL).
 
@@ -231,7 +265,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR2 — OAuth and JWT authentication
 
-**MVP**
+**MVP** · Jira: [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769)
 
 **Description:** Gateway validates OAuth-issued JWTs on every MCP request using SailPoint OAuth (JWKS). Supports Authorization Code + PKCE for interactive MCP clients.
 
@@ -255,7 +289,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR3 — MCP tools/list and tools/call
 
-**MVP**
+**MVP** · Jira: [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770)
 
 **Description:** Gateway exposes MCP protocol methods; `tools/list` uses AgentCore cache-first listing where configured; `tools/call` proxies to tenant backend in real time.
 
@@ -277,7 +311,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR4 — Tenant routing
 
-**MVP**
+**MVP** · Jira: [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771)
 
 **Description:** After auth, every request routes to the ISC MCP backend for the tenant bound to the caller's identity — via JWT `tenant_id` and/or `client_id` mapping.
 
@@ -300,7 +334,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR5 — Token expiration handling
 
-**MVP**
+**MVP** · Jira: [DPDE-1772](https://sailpoint.atlassian.net/browse/DPDE-1772)
 
 **Description:** Clear, programmatic handling when access tokens expire.
 
@@ -320,7 +354,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR6 — Backward compatibility
 
-**MVP**
+**MVP** · Jira: [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773)
 
 **Description:** Existing tenant-specific MCP URLs remain supported; gateway is additive.
 
@@ -341,7 +375,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR7 — Admin: MCP client registration
 
-**MVP** (minimum: **internal-admin** ISC UI; stretch: CLI-only)
+**MVP** (minimum: **internal-admin** ISC UI; stretch: CLI-only) · Jira: [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775)
 
 **Description:** Admins create, label, view, and revoke MCP OAuth clients.
 
@@ -363,7 +397,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR8 — client_id → tenant_id mapping store
 
-**MVP**
+**MVP** · Jira: [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776)
 
 **Description:** Durable store and APIs for mapping; consumed by routing and admin UI.
 
@@ -385,7 +419,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR9 — Snowflake: client mapping data
 
-**MVP**
+**MVP** · Jira: [DPDE-1774](https://sailpoint.atlassian.net/browse/DPDE-1774)
 
 **Description:** Mapping store replicated to Snowflake for analytics and support queries.
 
@@ -399,7 +433,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR10 — Usage dashboards and alarms
 
-**MVP**
+**MVP** · Jira: [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777)
 
 **Description:** Operational visibility: rate, latency, errors, per-tenant volume, auth failures.
 
@@ -413,7 +447,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR11 — Structured error responses and health
 
-**MVP**
+**MVP** · Jira: [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778)
 
 **Description:** Consistent error envelope; `GET /health` for probes.
 
@@ -439,7 +473,7 @@ Legend: **MVP** = P0 for closed beta · **Stretch** = may slip with PM sign-off
 
 ### FR12 — Structured request logging
 
-**MVP**
+**MVP** · Jira: [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779)
 
 **Description:** JSON logs per request; ship to OpenSearch (ops) and Snowflake (analytics); PII/token redaction.
 
@@ -539,18 +573,19 @@ Detailed sequencing: [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-pla
 
 ## 12. Workstreams (implementation map)
 
-| WS | FR/NFR | Epic (suggested) |
-| --- | --- | --- |
-| WS-A Routing & targets | FR3, FR4, FR8 | DPDE: Tenant routing & targets |
-| WS-B Auth | FR2, FR5, NFR-009/010 | DPDE: OAuth & identity |
-| WS-C Admin UI | FR7 | DPDE: ISC Admin MCP clients |
-| WS-D Telemetry | FR9, FR10, FR12 | DPDE: Telemetry & Snowflake |
-| WS-E Errors & health | FR11 | DPDE: Error handling & health |
-| WS-F Backward compat | FR6 | DPDE: Backward compatibility |
-| WS-G Performance | NFR-001–008 | DPDE: Performance & reliability |
-| WS-H Documentation | FR1, NFR-011/012 | DPDE: Documentation & enablement |
+Epics are created in Jira; see [§4.1 Jira epic index](#41-jira-epic-index) for keys and links.
 
-FR1 epic exists: [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767).
+| WS | FR/NFR | Primary epic(s) |
+| --- | --- | --- |
+| WS-A Routing & targets | FR3, FR4, FR8 | [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770), [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771), [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) |
+| WS-B Auth | FR2, FR5, NFR-009/010 | [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769), [DPDE-1772](https://sailpoint.atlassian.net/browse/DPDE-1772) |
+| WS-C Admin UI | FR7 | [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) |
+| WS-D Telemetry | FR9, FR10, FR12 | [DPDE-1774](https://sailpoint.atlassian.net/browse/DPDE-1774), [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777), [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779) |
+| WS-E Errors & health | FR11 | [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778) |
+| WS-F Backward compat | FR6 | [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) |
+| WS-G Performance | NFR-001–008 | [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) |
+| WS-H Documentation | FR1, NFR-011/012 | [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768), [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) |
+| Program / PoC | Phase 0–1 | [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767), [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) |
 
 ---
 
@@ -596,7 +631,7 @@ FR1 epic exists: [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767).
 ### Internal
 
 - [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704) — Initiative
-- [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) — Epic FR1
+- [§4.1 Jira epic index](#41-jira-epic-index) — DPDE-1767 … DPDE-1782 (FR1 = [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768))
 - [MCP Q1-2 PRD](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support)
 - [MCP PRD — Tenant-agnostic endpoint](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/) *(link via Confluence `NIDUAgE`)*
 - [HLD SailPoint MCP Server](https://sailpoint.atlassian.net/wiki/spaces/~557058a92a897c42824a4792963165ed4eea38/pages/3670769784/HLD+SailPoint+MCP+Server)
@@ -616,3 +651,4 @@ FR1 epic exists: [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767).
 | Version | Date | Author | Changes |
 | --- | --- | --- | --- |
 | 0.1 | 2026-05-16 | Dattu Marneni | Initial MVP spec draft |
+| 0.2 | 2026-05-16 | Dattu Marneni | Jira epic index (DPDE-1767–1782); FR1 → DPDE-1768; per-FR Jira links |

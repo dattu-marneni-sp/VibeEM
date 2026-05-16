@@ -22,7 +22,7 @@ For background concepts, see `docs/mcp-gateway.md`.
 
 **MVP specification (canonical scope):** [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) — FR/NFR acceptance criteria, PRD decision table, architecture, exit criteria.
 
-Jira: epics under **[INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)** in project **DPDE** (component **DP-SAF**). First epic: [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) (FR1).
+Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)** in project **DPDE** (component **DP-SAF**, labels `INIT-2704`, `mcp-gateway`). Canonical index: [`mcp-gateway-mvp-spec.md` §4.1](mcp-gateway-mvp-spec.md#41-jira-epic-index). **FR1:** [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) · **Kickoff:** [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) · **PoC:** [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) · **NFRs:** [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) · **Docs/GA:** [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782). Closed duplicate: [AI-1415](https://sailpoint.atlassian.net/browse/AI-1415).
 
 ## TL;DR For Leadership
 
@@ -649,21 +649,30 @@ Keep these in the appendix and pull them out only if asked:
 - FedRAMP and UAE1 region availability of AgentCore.
 - Whether the Masala (MCP) team is being absorbed, partnered with, or kept separate.
 
-## Pre-Epic Outline
+## Jira Epic Index (created)
 
-When creating additional Jira epics, use the workstreams below and copy acceptance criteria from [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md). Suggested epic structure:
+Epics exist in **DPDE**; full table in [`mcp-gateway-mvp-spec.md` §4.1](mcp-gateway-mvp-spec.md#41-jira-epic-index). Workstream → epic mapping:
 
-- **EPIC: MCP Gateway Foundation (Phase 0–1).** HLD, AWS account setup, AgentCore baseline, custom domain, PoC demo.
-- **EPIC: Tenant Routing & Backend Targets (WS-A).** Mapping store, target registration, routing logic.
-- **EPIC: OAuth & Identity Integration (WS-B).** SailPoint OAuth as JWT authorizer, PKCE, scope handling.
-- **EPIC: ISC Admin Portal — MCP Client Registration (WS-C).** UI work with Ben Coble's team.
-- **EPIC: Telemetry & Snowflake Integration (WS-D).** Mapping CDC, request logs, dashboards, alarms.
-- **EPIC: Error Handling & Health (WS-E).** Error envelope, `/health`, log redaction.
-- **EPIC: Backward Compatibility & Migration (WS-F).** Tests, migration guide.
-- **EPIC: Performance, Security, Load Testing (WS-G).** NFR validation.
-- **EPIC: Documentation & GA Launch (WS-H + Phase 4).** Setup guides, marketplace listing, GA cutover.
+| Workstream / phase | Jira epic |
+| --- | --- |
+| Program kickoff | [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) |
+| FR1 — Universal URL & client config | [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) |
+| FR2 — OAuth / JWT | [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) |
+| FR3 — tools/list & tools/call | [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) |
+| FR4 — Tenant routing | [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) |
+| FR5 — Token expiry UX | [DPDE-1772](https://sailpoint.atlassian.net/browse/DPDE-1772) |
+| FR6 — Backward compatibility | [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) |
+| FR7 — Admin Portal | [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) |
+| FR8 — Mapping store | [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) |
+| FR9 — Snowflake mapping | [DPDE-1774](https://sailpoint.atlassian.net/browse/DPDE-1774) |
+| FR10 — Dashboards & alarms | [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) |
+| FR11 — Errors & health | [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778) |
+| FR12 — Request logging | [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779) |
+| NFR validation | [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) |
+| Phase 0–1 foundation / PoC | [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) |
+| Documentation & GA | [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) |
 
-Each epic is sized roughly 4–8 stories; ticket-level breakdown is best done after Phase 0 sign-off so we don't create tickets that get rewritten.
+Break down each epic into stories using acceptance criteria from [`mcp-gateway-mvp-spec.md` §7–8](mcp-gateway-mvp-spec.md#7-functional-requirements). Target **4–8 stories per epic** after Phase 0 sign-off.
 
 ## References
 
