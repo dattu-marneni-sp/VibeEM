@@ -124,6 +124,110 @@ flowchart TB
 
 ---
 
+## Landscape — other teams, repos, and leadership (search snapshot)
+
+Searched **Jira**, **GitHub (`sailpoint-core`)**, **Slack**, and known **Confluence** links (May 2026). Confluence pages require login; titles/URLs below are from Jira/Slack references.
+
+### Leadership and PM ownership
+
+| Who | Role in MCP / gateway space | Evidence |
+| --- | --- | --- |
+| **Ye Zhu** | PM for **MCP Platform** (strategic) | Slack [#help-cursor](https://sailpoint.slack.com/archives/C09G6AT7XL1) — Nick Amaya; drives AWS AgentCore Gateway narrative to Tony/AWS |
+| **Nick Amaya** | AI team — MCP platform tooling evaluation; epic [AI-881](https://sailpoint.atlassian.net/browse/AI-881) | AI-881 On Hold; linked to INIT-2410 platform strategy |
+| **Alex Reichle** | Assignee on [AI-881](https://sailpoint.atlassian.net/browse/AI-881) External MCP Gateway | Customer-facing gateway epic (on hold) |
+| **Maryam Agahi** | Assignee [INIT-2410](https://sailpoint.atlassian.net/browse/INIT-2410) MCP Platform | Initiative below the line for stakeholder comms (SAF focus) |
+| **Rahul Mishra** | OAuth / platform — **Global OAuth and MCP URLs** arch review requester | [#eng-architecture](https://sailpoint.slack.com/archives/C063FQJ8J48) Jan 2026 |
+| **Jasper Chan / Kelly Grizzle** | AWS strategic partnership — **#ai-data-aws-explorations** | Ye’s MCP Gateway ask to AWS (Mar 2026); separate deep dive scheduled |
+| **Dave Owens** | Masala / **sp-mcp-server** ownership area | Slack: owns current [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server) |
+| **Dattu Marneni** | [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704), DPDE epics | Tactical gateway delivery (this plan) |
+
+### Track A — Global URL + sp-gateway (largest body of **shipped** work)
+
+Not AgentCore multiplexing, but **directly enables FR1** (`mcp.sailpoint.com`, `mcp.api.cloud.sailpoint.com`).
+
+| Team / lead | Key Jira | Status | What they built |
+| --- | --- | --- | --- |
+| **API Management (Priyanka Shukla area)** | [APIMGMT-1685](https://sailpoint.atlassian.net/browse/APIMGMT-1685) | Done | Support global MCP URLs in **sp-gateway** |
+| | [APIMGMT-1776](https://sailpoint.atlassian.net/browse/APIMGMT-1776) | Done | Route MCP endpoint to global MCP URL |
+| | [APIMGMT-1775](https://sailpoint.atlassian.net/browse/APIMGMT-1775) | Done | Route oauth-authorization-server to global token URL |
+| | [APIMGMT-1699](https://sailpoint.atlassian.net/browse/APIMGMT-1699) | In Progress | Epic: sp-gateway MCP + global URL ([Confluence HLD](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/4146135316/Global+OAuth+and+MCP+URLs+for+AI+client+integration)) — **Lori Van Gulick** |
+| | [APIMGMT-1863](https://sailpoint.atlassian.net/browse/APIMGMT-1863) | Backlog | Epic: MCP Gateway and Real Time AuthZ |
+| | [APIMGMT-1864](https://sailpoint.atlassian.net/browse/APIMGMT-1864) | Backlog | Spike: vendor compare + AgentCore routing scenario |
+| **Sigma / IPS** | [SAASSIGMA-5948](https://sailpoint.atlassian.net/browse/SAASSIGMA-5948), [SAASSIGMA-6170](https://sailpoint.atlassian.net/browse/SAASSIGMA-6170), [SAASSIGMA-6088](https://sailpoint.atlassian.net/browse/SAASSIGMA-6088) | Done | Deploy/test **mcp.api.cloud.sailpoint.com**, CloudFront global URL, OAuth global URL |
+| | [SAASSIGMA-6232](https://sailpoint.atlassian.net/browse/SAASSIGMA-6232) | Backlog | Configure **mcp.sailpoint.com** in prod |
+| | [SAASSIGMA-6087](https://sailpoint.atlassian.net/browse/SAASSIGMA-6087) | In Progress | IPS: single URL for all tenants |
+| **SRE** | [SAASSRE-6461](https://sailpoint.atlassian.net/browse/SAASSRE-6461) | In Progress | DNS for **mcp.sailpoint.com**, **login.sailpoint.com**, **api.identitynow.com**; CloudFront — **David Peterson** |
+| **Activity Data (Masala)** | [ISCANT-12559](https://sailpoint.atlassian.net/browse/ISCANT-12559) | Backlog | sp-mcp-server global dev URLs — **Antoine Troadec** |
+
+**Slack signal:** [Lori Van Gulick in #help-cursor](https://sailpoint.slack.com/archives/C09G6AT7XL1/p1778883059399099) testing `https://mcp.api.cloud.sailpoint.com/latest/access-requests/mcp` with Cursor (May 2026).
+
+**Architecture review (Jan 2026):** [Global OAuth and MCP URLs](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/4146135316/Global+OAuth+and+MCP+URLs+for+AI+client+integration) — Jeff Upton feedback: CloudFront + SSE/long-running MCP POC, FedRAMP gap, finalize global URLs.
+
+### Track B — AWS Bedrock AgentCore Gateway (POC / platform)
+
+| Team / engineer | Key Jira / repo | Status | What they built |
+| --- | --- | --- | --- |
+| **API Management** | [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990) | **Done** | Set up AgentCore MCP Gateway in us-east-1 — **Kartik Khamborkar** |
+| | [APIMGMT-1991](https://sailpoint.atlassian.net/browse/APIMGMT-1991) | **Done** | Go-based interceptor on AgentCore GW |
+| | [APIMGMT-1993](https://sailpoint.atlassian.net/browse/APIMGMT-1993) | In Progress | Outbound OAuth + target MCP server in AgentCore |
+| **Sigma** | [SAASSIGMA-6213](https://sailpoint.atlassian.net/browse/SAASSIGMA-6213) | In Progress | Lambda interceptor test — **Itay Gurvich** (unstable; AWS support engaged) |
+| **Eng AI Ops** | [ENGAIOPS-109](https://sailpoint.atlassian.net/browse/ENGAIOPS-109) | In Progress | AgentCore bootstrap infra + onboarding — **Jakob Vendegna** |
+| | [ENGAIOPS-110](https://sailpoint.atlassian.net/browse/ENGAIOPS-110) | Backlog | AgentCore platform design doc (DACI concerns) — **Chris Lejeune** |
+| **Platform infra** | [sp-agentcore-infra](https://github.com/sailpoint-core/sp-agentcore-infra) | WIP module | `modules/runtime` ready; **`modules/gateway` WIP** — shared Terraform building blocks |
+| **PDP reference** | [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) | Mar 2026 | Python PDP interceptor + Terraform (GitHub/Atlassian demo targets) |
+| **CAM / connector** | `connector-bundle-aws` bedrockagentcore | — | AgentCore connector for governance inventory (not MCP gateway product) |
+
+### Track C — Tenant MCP server (backend, not gateway)
+
+| Team | Repo / Jira | Notes |
+| --- | --- | --- |
+| **Masala / ADI** | [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server) — **Antoine Troadec** | Per-tenant MCP tools; quarterly releases (ADI-9640+); gateway **routes to** this |
+| **ISC RR** | [ISCRR-1543](https://sailpoint.atlassian.net/browse/ISCRR-1543), [ISCRR-1519](https://sailpoint.atlassian.net/browse/ISCRR-1519) | Done — SIEM/SOAR + intelligence package MCP analysis |
+
+### Track D — AI / SAF adjacent (not gateway, but leadership attention)
+
+| Item | Notes |
+| --- | --- |
+| [AI-881](https://sailpoint.atlassian.net/browse/AI-881) | External customer-facing MCP Gateway — **On Hold**; strategy + Q2 MCP PRD links |
+| [ENGAIOPS-109/110](https://sailpoint.atlassian.net/browse/ENGAIOPS-109) | Internal AgentCore **agent runtime** platform, not customer MCP URL |
+| [saas-sp-gateway](https://github.com/sailpoint-core/saas-sp-gateway) | New repo (May 2026); relationship to sp-gateway unclear — confirm with API Mgmt |
+| SAF comms | INIT-2410 below the line; Ye Zhu on ABM/SAF per [#proj-saf-dataai-leads](https://sailpoint.slack.com/archives/C0ARY4Y1RNE) |
+
+### Slack themes (beyond your DPDE epic creation)
+
+| Channel | Finding |
+| --- | --- |
+| [#ai-data-aws-explorations](https://sailpoint.slack.com/archives/C0AHC4U2PCN) | **Ye Zhu** MCP Gateway pitch to AWS (AgentCore Gateway, tool discovery, observability); AWS to schedule **separate technical deep dive**; briefing doc planned (Nick/Ye owner TBD) |
+| [#eng-architecture](https://sailpoint.slack.com/archives/C063FQJ8J48) | Approved design-review thread for **Global OAuth and MCP URLs** (Rahul Mishra) |
+| [#help-cursor](https://sailpoint.slack.com/archives/C09G6AT7XL1) | Engineers testing **global MCP URL** in Cursor; PM pointer to Ye Zhu for MCP platform |
+| [#team-eng-dp-jira](https://sailpoint.slack.com/archives/C0ABAE8LJ3D) | Bot noise from your **DPDE-1767–1782** epic creation (May 14) |
+| DMs | You asked Sachit/Mark about MCP Gateway (May 16) — org still ramping on SailPoint-specific context |
+
+### Confluence (referenced; not fully searchable without auth)
+
+| Page | Relevance |
+| --- | --- |
+| [Global OAuth and MCP URLs for AI client integration](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/4146135316/Global+OAuth+and+MCP+URLs+for+AI+client+integration) | **Primary HLD** for sp-gateway global URL path (INIT-2090 / APIMGMT-1699) |
+| [MCP Q1-2 PRD](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/) | INIT-2704 requirements source |
+| [Draft SailPoint MCP Platform Strategy](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4614226238/) | INIT-2410 / AI-881 |
+| [Q2 MCP PRD Platform Phase 1](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4853826767/) | AI-881 reference |
+| [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/) | Internal research |
+| [Approved MCP Servers](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4951474326/) | Lori’s Cursor test question |
+
+### Quick takeaway — who already did what vs INIT-2704
+
+| INIT-2704 needs | Already done elsewhere | Gap / owner to sync |
+| --- | --- | --- |
+| **FR1** universal URL + TLS | APIMGMT/Sigma/SRE global URL work; `mcp.api.cloud.sailpoint.com` in dev | **mcp.sailpoint.com** prod ([SAASSIGMA-6232](https://sailpoint.atlassian.net/browse/SAASSIGMA-6232)); align with Lori / David Peterson |
+| **FR2** OAuth/JWT | INIT-2090, ISCINTAKE-248, global OAuth routes | DCR vs static client — **Evan Anandappa / Rahul Mishra** |
+| **FR3–FR4** MCP + tenant route | sp-mcp-server per tenant; IPS single URL in flight | AgentCore **or** sp-gateway routing model — **Kartik / Itay / API Mgmt** |
+| **FR11–FR12** errors + logs | APIMGMT-1991 Go interceptor; SAASSIGMA-6213 Lambda; sailpoint-agentcore-pdp audit | SailPoint envelope + Snowflake — **DPDE** |
+| **Gateway product** | APIMGMT-1863/1864 spikes; AI-881 on hold; Ye/AWS AgentCore narrative | **INIT-2704 / DPDE** is the active execution track |
+
+**Coordination meeting short list:** Kartik Khamborkar (AgentCore POC done), Lori Van Gulick (APIMGMT-1699), David Peterson (SAASSRE-6461), Itay Gurvich (interceptor), Evan Anandappa (INIT-2090), Ye Zhu (platform/OAuth product), Antoine Troadec (sp-mcp-server backends).
+
+---
+
 **What “MVP in 4 weeks” means**
 
 | In scope (week 4 exit) | Deferred (weeks 5–12 or baseline plan) |
