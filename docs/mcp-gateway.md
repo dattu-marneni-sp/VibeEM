@@ -153,7 +153,7 @@ The current state of the approved MCP server list points to a tenant-specific en
 
 ## Related Repositories
 
-Internal codebases that overlap with the MCP gateway initiative ([INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)). Full MVP scope and Jira mapping: [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md).
+Internal codebases and Global Initiatives that overlap with the MCP gateway ([INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)). Full MVP scope, initiative analysis, and Jira mapping: [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) (§ Initiative landscape, § Quick takeaway).
 
 ### [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) (`sailpoint-core`)
 

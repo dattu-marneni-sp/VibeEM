@@ -39,7 +39,90 @@ Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/IN
 
 **Intent:** Ship a **working, demonstrable MCP gateway** in one sprint month: universal URL, OAuth/JWT, tenant routing, `tools/list` / `tools/call` from Cursor, minimal ops visibility. Align with existing platform work ([APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990), [SAASSRE-6461](https://sailpoint.atlassian.net/browse/SAASSRE-6461), [SAASSIGMA-6213](https://sailpoint.atlassian.net/browse/SAASSIGMA-6213)) instead of re-building DNS/gateway plumbing in parallel.
 
-**Starter code:** Extend [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) (AgentCore Gateway + PDP interceptor Terraform) per [`mcp-gateway.md` § Related Repositories](mcp-gateway.md#related-repositories) — epic de-risk map included there.
+**Starter code:** Extend [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) (AgentCore Gateway + PDP interceptor Terraform) per [`mcp-gateway.md` § Related Repositories](mcp-gateway.md#related-repositories) — full epic table there.
+
+### Quick takeaway — [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) de-risk map
+
+| DPDE epic | sailpoint-agentcore-pdp |
+| --- | --- |
+| [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) Foundation / PoC | **Largely de-risked** — AgentCore Gateway + Terraform + interceptor exist |
+| [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) FR3 | **Partial** — MCP `tools/list` / `tools/call` with external targets; **net-new** for ISC tenant backends |
+| [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779) FR12 | **Partial** — CloudWatch audit logging; **net-new** for Snowflake + SailPoint schema |
+| [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) FR2 | **Pattern only** (`CUSTOM_JWT` / `AWS_IAM`); **net-new** for SailPoint OAuth + PKCE |
+| [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) FR4, [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) FR8, [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) FR7, [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) FR1, [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) FR6, [DPDE-1774](https://sailpoint.atlassian.net/browse/DPDE-1774) FR9, [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) FR10, [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778) FR11, [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) NFRs, [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) Docs | **Net-new** |
+
+**In one line:** the PDP repo is a **spike accelerator** for gateway plane + audit hooks — **not** the SailPoint product (tenant routing, OAuth productization, admin, Snowflake, production NFRs). **Eng 1** should extend it; **Eng 2** still depends on [INIT-2090](https://sailpoint.atlassian.net/browse/INIT-2090) / OAuth platform delivery.
+
+---
+
+## Initiative landscape — how INIT-2704 fits
+
+Three Global Initiatives overlap MCP work. **Delivery focus for this plan:** [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704) (gateway execution). Treat the others as **context, dependencies, and scope guardrails**.
+
+```mermaid
+flowchart TB
+  INIT2410["INIT-2410 MCP Platform\n(strategic, below the line)"]
+  INIT2090["INIT-2090 OAuth 2.1 for MCP\n(auth dependency)"]
+  INIT2704["INIT-2704 MCP gateway\n(tactical delivery)"]
+  PDP["sailpoint-agentcore-pdp"]
+  DPDE["DPDE epics FR1–FR12"]
+
+  INIT2410 -.->|long-term vision| INIT2704
+  INIT2090 -->|blocks FR2| INIT2704
+  PDP -->|de-risks 1781 partial 1770 1779| INIT2704
+  INIT2704 --> DPDE
+```
+
+### [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704) — MCP gateway for SailPoint (this plan)
+
+| | |
+| --- | --- |
+| **What** | Tactical delivery of universal MCP URL + OAuth + tenant routing + observability (PRD Q1–2 scope). |
+| **Where tracked** | **DPDE** epics [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767)–[DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) under component **DP-SAF**. |
+| **Docs** | [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md), this execution plan. |
+| **4-week target** | Internal-pilot gateway using accelerated plan below. |
+
+### [INIT-2410](https://sailpoint.atlassian.net/browse/INIT-2410) — MCP Platform (strategic)
+
+| | |
+| --- | --- |
+| **What** | **SailPoint MCP Platform** — make MCP the standard integration fabric for agents across SailPoint: internal teams → customers → marketplace for verified MCP tools. Phased: (1) prove case + lock infrastructure, (2) build/pilot platform, (3) scale. Confluence: [platform strategy](https://sailpoint.atlassian.net/wiki/x/PoEHEwE). |
+| **Status** | In Progress in Jira, but **below the line** for stakeholder comms (May 2026): leadership directed **100% focus on SAF milestones**; initiative lead deprioritized for exec tracking. Reporter: Ye Zhu · Assignee: Maryam Agahi. |
+| **Implication for INIT-2704** | INIT-2704 is a **concrete slice** of Phase 1/2 platform thinking (gateway + auth + routing), not the full platform (tool generation at scale, marketplace, org-wide governance automation). **Do not** expand INIT-2704 scope to “build the entire MCP Platform” while INIT-2410 is below the line. |
+| **Coordination** | Align with Ye Zhu / Maryam Agahi on naming: gateway MVP **feeds** platform narrative later; avoid duplicate “platform” epics outside DPDE until INIT-2410 is re-baselined. |
+
+### [INIT-2090](https://sailpoint.atlassian.net/browse/INIT-2090) — MCP: OAuth 2.1 support for MCP (auth)
+
+| | |
+| --- | --- |
+| **What** | Update SailPoint authentication so **external MCP clients** (Cursor, Claude Desktop, etc.) can authenticate per **current MCP / OAuth 2.1 expectations**. |
+| **Problem statement** | Today’s auth does not meet MCP spec; blocks agent configuration. |
+| **Status** | In Progress · Priority Medium · Assignee: Evan Anandappa · Labels: `activity-data-insights`, `hp-core`, `q2'26-sos-track`. |
+| **Critical blocker** | [ISCINTAKE-248](https://sailpoint.atlassian.net/browse/ISCINTAKE-248) (**Open**) — OAuth 2.1 for MCP: **dynamic client registration (DCR)** + login/consent so customers can use a **tenant-specific URL** in the MCP client and complete auth. **Blocks** INIT-2090. |
+| **Child / related delivery** | [APIMGMT-1699](https://sailpoint.atlassian.net/browse/APIMGMT-1699) — *sp-gateway MCP and global url support* (In Progress, Lori Van Gulick) — implements [Global OAuth and MCP URLs for AI client integration](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/4146135316/Global+OAuth+and+MCP+URLs+for+AI+client+integration). **Overlaps INIT-2704 FR1** (universal URL). |
+| **Also related** | [IPSPLAN-605](https://sailpoint.atlassian.net/browse/IPSPLAN-605) (Planned idea) · [SAASSIGMA-6087](https://sailpoint.atlassian.net/browse/SAASSIGMA-6087) / [SAASSIGMA-6088](https://sailpoint.atlassian.net/browse/SAASSIGMA-6088) (IPS — single URL; dedupe question in comments). |
+
+**INIT-2090 vs INIT-2704 — important tension**
+
+| Topic | INIT-2090 / ISCINTAKE-248 direction | INIT-2704 MVP spec (accelerated) |
+| --- | --- | --- |
+| Client registration | **DCR** + consent at connect time | **Static** `client_id` + admin/CLI registration (DCR → Phase II) |
+| URL model | **Tenant-specific URL** in MCP client | **Universal** `mcp.sailpoint.com` + JWT routing |
+| Owner | OAuth / ISC platform (Dave Owens intake) | DPDE / gateway team |
+
+**Week-1 action:** Joint working session with **Evan Anandappa**, **Rahul Mishra** (OAuth), and **APIMGMT-1699** owner — agree minimum OAuth deliverable for 4-week gateway demo (e.g. static client + PKCE on universal URL) vs waiting for full ISCINTAKE-248. **DPDE-1769 (FR2) cannot close** without this alignment.
+
+### Cross-initiative dependency matrix (execution plan)
+
+| Work item | Initiative | DPDE epic | Owner to confirm |
+| --- | --- | --- | --- |
+| Universal URL / DNS / sp-gateway | INIT-2090 → APIMGMT-1699 | DPDE-1768 FR1 | Lori Van Gulick / SRE |
+| OAuth 2.1 + PKCE + JWT authorizer | INIT-2090 ← ISCINTAKE-248 | DPDE-1769 FR2 | Evan Anandappa / Rahul Mishra |
+| AgentCore gateway + PDP | INIT-2704 | DPDE-1781, partial 1779 | DPDE Eng 1 + sailpoint-agentcore-pdp |
+| Tenant routing / single URL IPS | INIT-2704 | DPDE-1771 FR4 | SAASSIGMA-6087 |
+| Strategic platform / marketplace | INIT-2410 | *(none — deferred)* | Ye Zhu / Maryam Agahi |
+
+---
 
 **What “MVP in 4 weeks” means**
 

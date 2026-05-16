@@ -128,7 +128,9 @@ All epics are type **Epic**, project **DPDE**, component **DP-SAF**, labels **`I
 
 **Related work (coordinate, not INIT epic set):** APIMGMT-1990, SAASSIGMA-6213, SAASSRE-6461, APIMGMT-1699, AI-881.
 
-**Related repo:** [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) — AgentCore Gateway + audit interceptor PDP; de-risks [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) / partial FR3 & FR12. See [`mcp-gateway.md` § Related Repositories](mcp-gateway.md#related-repositories).
+**Related repo:** [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) — de-risk map in [`mcp-gateway-execution-plan.md` § Quick takeaway](mcp-gateway-execution-plan.md#quick-takeaway--sailpoint-agentcore-pdp-de-risk-map).
+
+**Related initiatives:** [INIT-2090](https://sailpoint.atlassian.net/browse/INIT-2090) OAuth 2.1 (FR2 dependency) · [INIT-2410](https://sailpoint.atlassian.net/browse/INIT-2410) MCP Platform (strategic, below the line) — see [`mcp-gateway-execution-plan.md` § Initiative landscape](mcp-gateway-execution-plan.md#initiative-landscape--how-init-2704-fits).
 
 ---
 
