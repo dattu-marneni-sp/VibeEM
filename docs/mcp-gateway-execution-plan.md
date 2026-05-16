@@ -317,6 +317,151 @@ All       | Demo: skeleton     | Demo: 1 tenant E2E | Demo: 2 tenants    | Demo:
 - **Pre-baked prompts:** “Add contract test for 401 envelope,” “Generate k6 smoke for tools/list,” “Draft Cursor mcp.json for gateway URL.”
 - **Do not AI-scope creep:** No multiplexing, no semantic search, no FedRAMP — explicit in rules file.
 
+### Reference architectures — AWS AgentCore tutorials + API Mgmt HLD
+
+Two external references define **how** to build; INIT-2704 / DPDE defines **what** to ship in four weeks.
+
+| Reference | Link | Owner / status |
+| --- | --- | --- |
+| **AWS AgentCore Gateway tutorials** | [awslabs/agentcore-samples — 02-AgentCore-gateway](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway) | Public; Ye Zhu / AWS deep dive (Mar 2026) |
+| **MCP Gateway and Real-Time Authorization — High Level Plan** | [Confluence (Kartik Khamborkar space)](https://sailpoint.atlassian.net/wiki/spaces/~712020303f3c3361704efaa8f88f28b4536d5d/pages/5028315398/MCP+Gateway+and+Real-Time+Authorization+High+Level+Plan) | API Management; mirrors [APIMGMT-1863](https://sailpoint.atlassian.net/browse/APIMGMT-1863) (Backlog) |
+
+> **Confluence note:** Page requires Atlassian login; content was not machine-readable in this pass. Title + Jira + completed APIMGMT tasks below infer the plan. **Week-1 action:** 30-min read with **Kartik Khamborkar**; paste any deltas into this doc or link the page from [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767).
+
+#### What the AWS tutorial suite proves (buy vs build)
+
+AgentCore Gateway is a **managed MCP endpoint** (Streamable HTTP only) with **targets** (Lambda, OpenAPI/Smithy, **MCP servers**) and **dual auth**:
+
+| AWS concept | Tutorial(s) | Maps to DPDE / FR |
+| --- | --- | --- |
+| Create gateway + invoke MCP | [README](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway), `04-integration` | [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) — **done in spirit** by [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990) |
+| **MCP server as target** (multiplex many backends) | [`05-mcp-server-as-a-target`](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway/05-mcp-server-as-a-target) | [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) FR3, [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) FR4 — register each **ISC tenant `sp-mcp-server`** as a target; use `listingMode='DYNAMIC'` in dev to skip catalog sync |
+| Inbound OAuth (MCP auth spec) | `17-inbound-auth-code-flow-okta` | [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) FR2 — wire **SailPoint OAuth** as IdP (not Okta in prod) |
+| Outbound OAuth to backend | `13-outbound-auth-code-grant`, [APIMGMT-1993](https://sailpoint.atlassian.net/browse/APIMGMT-1993) | Token to tenant MCP backend — coordinate with Kartik |
+| **Request/response interceptors** (FGAC, audit) | [`09-fine-grained-access-control`](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway/09-fine-grained-access-control) | Real-time authz on `tools/call` + filter `tools/list` by JWT scopes — [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779) FR12 partial |
+| **Token exchange** at interceptor | [`14-token-exchange-at-request-interceptor`](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway/14-token-exchange-at-request-interceptor) | Inbound SailPoint JWT → outbound credential for tenant MCP (if backends require different client) |
+| Tenant / correlation headers (no Lambda) | [`08-custom-header-propagation`](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway/08-custom-header-propagation) | `metadataConfiguration.allowedRequestHeaders` e.g. `x-tenant-id` after mapping lookup — faster than custom routing Lambda for v0 |
+| Semantic tool search | `03-search-tools` | **Descoped** for 4-week MVP (INIT-2410 / Ye narrative; not P0) |
+| Transform APIs/Lambda to tools | `01-`, `02-` | **Not MVP** — backends are already MCP ([sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server)) |
+
+**4-week technical bet:** Use **tutorial 05** (MCP-as-target) + **09** (interceptor FGAC) + **08** (headers) on top of Kartik’s gateway ([APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990)) and Lori’s **global URL** ([APIMGMT-1699](https://sailpoint.atlassian.net/browse/APIMGMT-1699)), instead of building a JSON-RPC proxy or second gateway.
+
+#### Inferred fit — Kartik’s Confluence HLD ↔ INIT-2704
+
+The Confluence title matches epic **[APIMGMT-1863](https://sailpoint.atlassian.net/browse/APIMGMT-1863)** (*MCP Gateway and Real Time AuthZ*, assignee **Kartik Khamborkar**). Completed sibling work:
+
+| APIMGMT | Status | Likely HLD section already implemented |
+| --- | --- | --- |
+| [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990) | **Done** | AgentCore MCP Gateway in us-east-1 |
+| [APIMGMT-1991](https://sailpoint.atlassian.net/browse/APIMGMT-1991) | **Done** | Go request interceptor on gateway |
+| [APIMGMT-1993](https://sailpoint.atlassian.net/browse/APIMGMT-1993) | In Progress | Outbound OAuth + MCP target in AgentCore |
+| [APIMGMT-1864](https://sailpoint.atlassian.net/browse/APIMGMT-1864) | Backlog spike | “Setup AgentCore as MCP gw and try a **routing scenario**” — same as AWS tutorial 05 + your FR4 spike |
+
+**Alignment with DPDE (INIT-2704):**
+
+| HLD theme (inferred) | DPDE epic | Who should build in 4 weeks |
+| --- | --- | --- |
+| AgentCore gateway plane | [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) | **Merge** with Kartik — extend [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) + APIMGMT PoC; do not stand up a second gateway account |
+| Real-time authorization (interceptor / PDP) | [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779), partial [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) | Kartik (Go) **or** DPDE Eng 1 (Python PDP hooks) — **pick one interceptor** for MVP |
+| Universal URL + TLS | [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) FR1 | **Lori / SRE** — not DPDE greenfield |
+| SailPoint OAuth + JWT | [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) FR2 | **Evan / Rahul** ([INIT-2090](https://sailpoint.atlassian.net/browse/INIT-2090)) |
+| `client_id → tenant_id` + route to tenant MCP | [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771), [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) | **DPDE Eng 1** — mapping store + target selection (tutorial 05 pattern) |
+| Product docs + pilot | [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) | **DPDE Eng 3 / EM** |
+
+**Adjacent (do not conflate):** [INIT-2591](https://sailpoint.atlassian.net/browse/INIT-2591) *SAF \| Agentic Real Time Authorization* is a separate SAF authorization product track (agentic access PRD). Kartik’s “Real-Time AuthZ” in the MCP HLD is **request-path MCP policy**, not a duplicate of INIT-2591 — but coordinate with **Kishore Darisipudi** so PDP rules do not fork.
+
+#### Architecture choice for fastest 4-week E2E
+
+```mermaid
+flowchart LR
+  Client["MCP client\nCursor / Claude"]
+  URL["Global URL\nmcp.api.cloud.sailpoint.com\nAPIMGMT-1699 / SRE"]
+  OAuth["SailPoint OAuth\nINIT-2090"]
+  ACGW["AgentCore Gateway\nAPIMGMT-1990 + PDP"]
+  IX["Interceptor\nFGAC + tenant route\n09 / 14 / sailpoint-agentcore-pdp"]
+  Map["client_id → tenant_id\nDPDE mapping store"]
+  T1["MCP target\ntenant A sp-mcp-server"]
+  T2["MCP target\ntenant B sp-mcp-server"]
+
+  Client --> URL
+  Client --> OAuth
+  URL --> ACGW
+  OAuth --> ACGW
+  ACGW --> IX
+  Map --> IX
+  IX --> T1
+  IX --> T2
+```
+
+**Alternative (slower for multiplexing):** sp-gateway alone routes to one tenant MCP URL (Lori’s current Cursor test) — satisfies FR1 partial but **not** FR4 multi-tenant on one client config. INIT-2704 MVP needs **AgentCore + MCP targets** (tutorial 05) or equivalent multiplexing.
+
+### EM playbook — how Dattu accelerates the 4-week plan
+
+You are **INIT-2704** owner and integration EM. The lever is not more code — it is **forcing one architecture, one repo, and calendar-bound dependencies** while Kartik/Lori/Evan ship platform pieces.
+
+#### Week 0 (before sprint clock) — 2 days
+
+| Action | Outcome |
+| --- | --- |
+| **Read** [AWS 02-AgentCore-gateway README](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway) + skim `05`, `09`, `14` | Shared vocabulary for Eng 1 / Kartik |
+| **30-min with Kartik** — walk [Confluence HLD](https://sailpoint.atlassian.net/wiki/spaces/~712020303f3c3361704efaa8f88f28b4536d5d/pages/5028315398/MCP+Gateway+and+Real-Time+Authorization+High+Level+Plan) + [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990)/[1991](https://sailpoint.atlassian.net/browse/APIMGMT-1991) | Agree: DPDE **extends** his PoC; link APIMGMT-1863 ↔ DPDE-1781 in Jira |
+| **Post decision memo** (D1–D7 from MVP spec) — 1 page | Unblocks Eng 2; records universal URL vs tenant URL |
+| **Book OAuth war room** (Evan, Rahul, Lori) — 90 min | Minimum OAuth for demo: static client + PKCE on global URL |
+| **Assign Eng 1/2/3 names** in role table above | Stops “TBD” drift |
+
+#### Week 1 — integration, not greenfield
+
+| Your move | Why it saves weeks |
+| --- | --- |
+| **Single “gateway program” thread** with Kartik + Priyanka (APIMGMT EM) | Avoids duplicate AgentCore accounts and competing interceptors |
+| **Mandate one interceptor** for MVP: Python PDP **or** Go (1991) — not both | Two interceptors = debug hell |
+| **Point Eng 1 at tutorial `05-mcp-server-as-a-target`** with `listingMode=DYNAMIC` | No `SynchronizeGatewayTargets` churn in week 1 |
+| **File Jira links:** DPDE-1781 blocks on / is satisfied by APIMGMT-1990 | Makes reuse auditable for leadership |
+| **Get Lori’s dev URL** for Cursor smoke (`mcp.api.cloud.sailpoint.com/...`) | FR1 demo without waiting for `mcp.sailpoint.com` prod ([SAASSIGMA-6232](https://sailpoint.atlassian.net/browse/SAASSIGMA-6232)) |
+| **Daily 15-min demo** — even “tools/list fails with 401” | Surfaces OAuth blocker early |
+
+#### Week 2 — E2E ownership
+
+| Your move | Why |
+| --- | --- |
+| **Own the demo script** (Cursor config + test tenant + client_id) | Removes ambiguity in “done” |
+| **Pair Eng 2 with Evan’s team** on JWT claims (`tenant_id`, scopes) | FR2 + FR4 hinge on claim shape |
+| **Escalate if APIMGMT-1993 slips** — outbound OAuth to tenant MCP | Kartik’s in-flight item; on critical path for `tools/call` |
+| **Publish internal quickstart draft** in VibeEM / Confluence | SC-1 prep; Cursor can generate from working config |
+
+#### Week 3 — scope guard
+
+| Your move | Why |
+| --- | --- |
+| **Say no** to semantic search, DCR, INIT-2410 platform scope | Keeps 4-week credible |
+| **Security 2-hr review** — routing fuzz + JWT scope tests (tutorial 09 pattern) | SC-2 gate |
+| **Admin CLI only** — defer FR7 UI unless Ben commits date | FR7 is #1 schedule killer |
+
+#### Week 4 — pilot package
+
+| Your move | Why |
+| --- | --- |
+| **Run MVP spec §14 checklist** — document honest exceptions | Leadership trust |
+| **Record demo video** (Cursor → universal URL → tools/list → tools/call) | Gaurav / SAF stakeholder proof |
+| **Propose week 5–8** for Snowflake, prod hostname, beta tenants | Sets expectations: 4 weeks = **internal pilot**, not GA |
+| **Schedule AWS deep dive** with Ye/Jasper — bring tutorial questions list | Closes gaps on interceptor limits, FedRAMP, cost |
+
+#### What you should **not** do in 4 weeks
+
+- Own Terraform for AgentCore if Kartik already has it — **coordinate**, don’t rewrite.
+- Wait for full [ISCINTAKE-248](https://sailpoint.atlassian.net/browse/ISCINTAKE-248) DCR — negotiate static-client path.
+- Merge INIT-2704 with INIT-2410 marketplace / tool-generation scope.
+- Build sp-gateway routing **and** AgentCore multiplexing without an explicit architecture decision.
+
+#### Updated four-week engineering focus (tutorial-aligned)
+
+| Week | Eng 1 (Platform) | Eng 2 (Identity) | Eng 3 / EM |
+| --- | --- | --- | --- |
+| **1** | Fork **sailpoint-agentcore-pdp**; add 1× MCP target (tutorial **05**); reuse APIMGMT-1990 gateway | OAuth authorizer spike; JWT claims doc | Compat harness; **EM:** Kartik sync + D1–D7 memo |
+| **2** | Mapping store → pick target per `client_id`; optional **08** headers | PKCE E2E in Cursor on Lori’s global URL | Quickstart draft |
+| **3** | Interceptor: **09** scope filter + tenant deny; error envelope | Revoked/expired token tests | Admin CLI; FR6 smoke |
+| **4** | CloudWatch logs + `/health`; 2-tenant fuzz | Token UX polish | Demo video; §14 checklist; **EM:** pilot sign-off |
+
 ### Accelerated vs baseline timeline
 
 | Milestone | Accelerated (2–3 eng + Cursor) | Baseline Option B |
