@@ -4,6 +4,8 @@ This document is a working primer on what an MCP (Model Context Protocol) gatewa
 
 It exists to give context to anyone joining the discussion without needing to read all of the underlying PRDs and HLDs first.
 
+**MVP scope and acceptance criteria:** see [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md).
+
 ## What An MCP Gateway Is
 
 An MCP gateway is a server that sits in front of one or more MCP servers and acts as a single, governed entry point between AI clients (Cursor, Claude, ChatGPT, custom agents) and the actual tools or services those clients want to use.

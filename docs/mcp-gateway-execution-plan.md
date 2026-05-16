@@ -20,7 +20,9 @@ This is an EM-level execution plan for delivering a SailPoint MCP gateway built 
 
 For background concepts, see `docs/mcp-gateway.md`.
 
-This plan is intentionally a working draft — Jira epics are **not** created yet. The intent is to align with leadership and the PMs (Ye Zhu, Rahul Mishra) before locking scope.
+**MVP specification (canonical scope):** [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) — FR/NFR acceptance criteria, PRD decision table, architecture, exit criteria.
+
+Jira: epics under **[INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)** in project **DPDE** (component **DP-SAF**). First epic: [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) (FR1).
 
 ## TL;DR For Leadership
 
@@ -647,9 +649,9 @@ Keep these in the appendix and pull them out only if asked:
 - FedRAMP and UAE1 region availability of AgentCore.
 - Whether the Masala (MCP) team is being absorbed, partnered with, or kept separate.
 
-## Pre-Epic Outline (For When We're Ready)
+## Pre-Epic Outline
 
-When you're ready to create Jira epics, the natural cut points are the workstreams above. Suggested epic structure (intentionally not creating these yet):
+When creating additional Jira epics, use the workstreams below and copy acceptance criteria from [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md). Suggested epic structure:
 
 - **EPIC: MCP Gateway Foundation (Phase 0–1).** HLD, AWS account setup, AgentCore baseline, custom domain, PoC demo.
 - **EPIC: Tenant Routing & Backend Targets (WS-A).** Mapping store, target registration, routing logic.
@@ -668,5 +670,6 @@ Each epic is sized roughly 4–8 stories; ticket-level breakdown is best done af
 - `[MCP Q1-2 PRD] SailPoint MCP Server Single URL and OAuth Support` — Confluence tiny link `fIBAFAE`
 - `[MCP PRD] Tenant-Agnostic MCP Server Endpoint & OAuth Integration` — Confluence tiny link `NIDUAgE`
 - `docs/mcp-gateway.md` — concept primer
+- `docs/mcp-gateway-mvp-spec.md` — MVP specification (FR/NFR AC, decisions, exit criteria)
 - [AWS — Bedrock AgentCore Gateway](https://aws.amazon.com/bedrock/agentcore/)
 - [AWS — Transform your MCP architecture: Unite MCP servers through AgentCore Gateway](https://aws.amazon.com/blogs/machine-learning/transform-your-mcp-architecture-unite-mcp-servers-through-agentcore-gateway/)
