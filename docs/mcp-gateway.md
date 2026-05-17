@@ -6,6 +6,8 @@ It exists to give context to anyone joining the discussion without needing to re
 
 **MVP scope and acceptance criteria:** see [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md).
 
+**Related documents:** [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) · **PRD 1:** [\[MCP Q1-2 PRD\] Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · **PRD 2:** [\[MCP PRD\] Tenant-Agnostic Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
+
 ## What An MCP Gateway Is
 
 An MCP gateway is a server that sits in front of one or more MCP servers and acts as a single, governed entry point between AI clients (Cursor, Claude, ChatGPT, custom agents) and the actual tools or services those clients want to use.
@@ -144,12 +146,15 @@ This is a cleaner pattern than naive multiplexing because it separates the slow 
 
 ## SailPoint Context
 
-There are two existing internal documents that describe the early thinking, both of which are expected to be superseded by what is being asked of the team now:
+There are two existing internal PRDs plus an earlier HLD that describe the early thinking; the PRDs are expected to be reconciled and partially superseded by the INIT-2704 gateway delivery:
 
-- `[MCP Q1-2 PRD] SailPoint MCP Server Single URL and OAuth Support` — proposes a thin routing gateway at `https://mcp.sailpoint.com/` that validates OAuth or JWT and forwards MCP requests like `tools/list` and `tools/call` to the correct tenant-specific backend. Existing tenant-specific MCP URLs continue to work; the gateway is additive.
-- `[HLD] SailPoint MCP Server` — earlier design for `sp-mcp-server`, an internal microservice that acts as an API gateway for MCP calls into SailPoint systems. Implements the MCP spec (`tools/call`, `tools/list`, `resources/list`, etc.) and delegates execution to other internal services such as RATS and `sp-workflow-*`.
+- **[PRD 1 — \[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support)** — proposes a thin routing gateway at `https://mcp.sailpoint.com/` that validates OAuth or JWT and forwards MCP requests like `tools/list` and `tools/call` to the correct tenant-specific backend. Existing tenant-specific MCP URLs continue to work; the gateway is additive.
+- **[PRD 2 — \[MCP PRD\] Tenant-Agnostic MCP Server Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)** — universal URL at `https://mcp.identitynow.com/`, email-based tenant discovery via `login.sailpoint.com`, OAuth 2.1 + PKCE + DCR, and broader platform NFRs. Conflicts with PRD 1 on hostname, OAuth model, and tenant resolution — see [execution plan § Key Caveat](mcp-gateway-execution-plan.md#key-caveat-the-two-prds-disagree).
+- **[HLD] SailPoint MCP Server** — earlier design for `sp-mcp-server`, an internal microservice that acts as an API gateway for MCP calls into SailPoint systems. Implements the MCP spec (`tools/call`, `tools/list`, `resources/list`, etc.) and delegates execution to other internal services such as RATS and `sp-workflow-*`.
 
-The current state of the approved MCP server list points to a tenant-specific endpoint (for example `https://adi-01.api.cloud.sailpoint.com/v2025/access-requests/mcp`) rather than a universal gateway URL. The universal gateway is still draft or design-stage, and the new ask is to build something that supersedes both of the above.
+The **public** developer contract today is documented at [MCP Getting Started](https://developer.sailpoint.com/docs/extensibility/mcp-getting-started/): **Streamable HTTP** to `https://[tenant].api.identitynow.com/v2025/access-requests/mcp` with a **Bearer API access token**, and four access-request tools (`list-requestable`, `create-access-request`, `view-access-requests`, `cancel-access-request`). That is what customers and partners see in May 2026.
+
+Internally, teams also use `*.api.cloud.sailpoint.com` hosts (for example `https://adi-01.api.cloud.sailpoint.com/v2025/access-requests/mcp`). The universal gateway must keep **both** tenant URL patterns working (FR6) while introducing a single client-facing URL for Cursor/OAuth (INIT-2704). The universal gateway is still draft or design-stage, and the new ask is to build something that supersedes both of the above.
 
 **Related research (Dave Owens):** [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) documents how **AgentCore Gateway interceptors** can route Marketplace or agent traffic to existing **tenant-specific MCP URLs** on EKS (API-based SaaS listing, no container repackaging). It also defines **two authentication layers** — service/tenant identity at the gateway and **ISC user identity** at `sp-mcp-server` — which the 4-week INIT-2704 plan collapses into a single Cursor PKCE user token for the internal pilot. Full analysis: [`mcp-gateway-execution-plan.md` § Dave Owens — Marketplace & AgentCore](mcp-gateway-execution-plan.md#dave-owens--marketplace--agentcore-integration-confluence).
 
@@ -237,13 +242,25 @@ An MCP gateway is the enterprise control plane for AI tool use — a reverse pro
 
 ## References
 
+### Related documents
+
+| Document | Link |
+| --- | --- |
+| **PRD 1** — Q1-2 Single URL and OAuth | [Confluence](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · [tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE) |
+| **PRD 2** — Tenant-agnostic endpoint | [Confluence](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) · [tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE) |
+| MVP specification | [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) |
+| Execution plan | [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) |
+
 ### SailPoint Internal
 
-- [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support)
+- [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) (PRD 1) ([tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE))
+- [\[MCP PRD\] Tenant-Agnostic MCP Server Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) (PRD 2) ([tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE))
 - [\[HLD\] SailPoint MCP Server](https://sailpoint.atlassian.net/wiki/spaces/~557058a92a897c42824a4792963165ed4eea38/pages/3670769784/HLD+SailPoint+MCP+Server)
 - [\[Draft\] SailPoint MCP Platform Strategy](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4614226238/Draft+SailPoint+MCP+Platform+Strategy)
 - [Enterprise MCP Server Infrastructure Research](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4631528649/Enterprise+MCP+Server+Infrastructure+Research)
 - [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration)
+- [MCP Getting Started](https://developer.sailpoint.com/docs/extensibility/mcp-getting-started/) — **current public** tenant URL + PAT auth + MCP Inspector flow
+- [MCP Available Tools](https://developer.sailpoint.com/docs/extensibility/mcp-available-tools/) — public tool catalog (four access-request tools)
 - [Approved MCP Servers](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4951474326)
 - [MCP Server Request Process](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4175036476)
 - [AI Assistants + MCP servers: Onboarding guide](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4914413686/AI+Assistants+MCP+servers+Onboarding+guide)

@@ -16,12 +16,14 @@ As AI agents are adopted at scale, developer teams can create dozens to hundreds
 
 This is an EM-level execution plan for delivering a SailPoint MCP gateway built on **AWS Bedrock AgentCore Gateway** as the managed service foundation, satisfying the FRs and NFRs in:
 
-- `[MCP Q1-2 PRD] SailPoint MCP Server Single URL and OAuth Support`
-- `[MCP PRD] Tenant-Agnostic MCP Server Endpoint & OAuth Integration`
+- [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support)
+- [\[MCP PRD\] Tenant-Agnostic MCP Server Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
 
 For background concepts, see `docs/mcp-gateway.md`.
 
 **MVP specification (canonical scope):** [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) — FR/NFR acceptance criteria, PRD decision table, architecture, exit criteria.
+
+**Related documents:** [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · **PRD 1:** [\[MCP Q1-2 PRD\] Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · **PRD 2:** [\[MCP PRD\] Tenant-Agnostic Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
 
 Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)** in project **DPDE** (component **DP-SAF**, labels `INIT-2704`, `mcp-gateway`). Canonical index: [`mcp-gateway-mvp-spec.md` §4.1](mcp-gateway-mvp-spec.md#41-jira-epic-index). **FR1:** [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) · **Kickoff:** [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) · **PoC:** [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) · **NFRs:** [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) · **Docs/GA:** [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782). Closed duplicate: [AI-1415](https://sailpoint.atlassian.net/browse/AI-1415).
 
@@ -130,6 +132,28 @@ python3 test_mcp_tools.py             # base_url = http://localhost:7100
 ```
 
 Confluence runbook: [MCP Access Review Requests — local](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/3710582785/MCP+Access+Review+Requests#Locally).
+
+#### Public baseline — [developer.sailpoint.com MCP Getting Started](https://developer.sailpoint.com/docs/extensibility/mcp-getting-started/)
+
+This is the **current customer-facing contract** (last updated Nov 2025). INIT-2704 must **preserve** it for FR6 and **supersede** only the connection URL/auth UX for Cursor-class clients.
+
+| Topic | What is published today | Gateway MVP changes |
+| --- | --- | --- |
+| **Endpoint** | `https://[tenant].api.identitynow.com/v2025/access-requests/mcp` — tenant in hostname | Universal URL (`mcp.sailpoint.com` / `mcp.api.cloud.sailpoint.com`) + routing; **tenant URLs stay valid** |
+| **Transport** | **Streamable HTTP** | Same — AgentCore and `sp-mcp-server` already use this |
+| **Auth (public guide)** | Static **API access token** in `Authorization: Bearer …` ([Authentication](https://developer.sailpoint.com/docs/api/v2025/authentication)) | **Additional path:** OAuth PKCE for Cursor/Claude (FR2) — document both in quickstart |
+| **Test harness** | `npx @modelcontextprotocol/inspector` + Streamable HTTP | Reuse for **FR6** smoke (tenant URL) and week-4 gateway URL regression |
+| **Tools** | Four access-request tools ([Available Tools](https://developer.sailpoint.com/docs/extensibility/mcp-available-tools/)): `list-requestable`, `create-access-request`, `view-access-requests`, `cancel-access-request` | Same four are the **public** surface; `sp-mcp-server` may expose **`list-request-identities`** internally — do not break the four for compat |
+| **Hostname families** | Docs use **`api.identitynow.com`** | Internal stacks also use **`api.cloud.sailpoint.com`** (Lori’s tests). Gateway routing table must support **both** tenant hostname patterns per environment |
+
+**4-week implications**
+
+1. **Week 1 baseline test** — Run MCP Inspector against tenant URL exactly as [Getting Started](https://developer.sailpoint.com/docs/extensibility/mcp-getting-started/) before any gateway work (proves public contract).
+2. **Week 4 deliverable** — Draft updated quickstart: same tools and Streamable HTTP; replace “put your tenant in the URL” with “use `mcp.sailpoint.com` + `client_id` + OAuth” (coordinate **DPDE-1782** with developer portal owners).
+3. **FR6 acceptance** — Automated suite hits **published** URL shape (`*.api.identitynow.com/...`) **and** internal `*.api.cloud.sailpoint.com/...` if both remain in production.
+4. **Do not** ship gateway MVP without a plan to refresh public docs — customers will otherwise see only the old tenant-URL flow ([competitive gap](docs/mcp-gateway.md) vs marketplace listings).
+
+**Gap to close with PM/docs:** Public guide teaches **PAT bearer**; PRD emphasizes **OAuth for MCP clients**. MVP quickstart should state: *Inspector/PAT = tenant-direct debugging; Cursor/Claude = gateway URL + OAuth.*
 
 #### How sp-mcp-server accelerates each week (4-week delivery)
 
@@ -350,7 +374,8 @@ Not AgentCore multiplexing, but **directly enables FR1** (`mcp.sailpoint.com`, `
 | Page | Relevance |
 | --- | --- |
 | [Global OAuth and MCP URLs for AI client integration](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/4146135316/Global+OAuth+and+MCP+URLs+for+AI+client+integration) | **Primary HLD** for sp-gateway global URL path (INIT-2090 / APIMGMT-1699) |
-| [MCP Q1-2 PRD](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/) | INIT-2704 requirements source |
+| [MCP Q1-2 PRD](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) ([tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE)) | INIT-2704 requirements source (**PRD 1**) |
+| [MCP PRD — Tenant-agnostic endpoint](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) ([tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE)) | INIT-2704 requirements source (**PRD 2**) |
 | [Draft SailPoint MCP Platform Strategy](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4614226238/) | INIT-2410 / AI-881 |
 | [Q2 MCP PRD Platform Phase 1](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4853826767/) | AI-881 reference |
 | [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) | **Dave Owens** — Marketplace + AgentCore routing research (see [§ Dave Owens — Marketplace & AgentCore doc](#dave-owens--marketplace--agentcore-integration-confluence)) |
@@ -618,9 +643,16 @@ You are **INIT-2704** owner and integration EM. The lever is not more code — i
 
 ## Key Caveat: The Two PRDs Disagree
 
+The requirements below come from two Confluence PRDs that are not fully aligned:
+
+| | Document |
+| --- | --- |
+| **PRD 1** | [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) — [tiny link](https://sailpoint.atlassian.net/wiki/x/fIBAFAE) |
+| **PRD 2** | [\[MCP PRD\] Tenant-Agnostic MCP Server Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) — [tiny link](https://sailpoint.atlassian.net/wiki/x/NIDUAgE) |
+
 Before we write a line of code, the team needs PM alignment on three points where the PRDs conflict:
 
-| Topic | PRD 1 (`fIBAFAE`) | PRD 2 (`NIDUAgE`) | What we need to decide |
+| Topic | [PRD 1](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) | [PRD 2](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) | What we need to decide |
 | --- | --- | --- | --- |
 | Public URL | `https://mcp.sailpoint.com/` | `https://mcp.identitynow.com/` | One canonical hostname (and FedRAMP / UAE1 variants). |
 | Tenant resolution | `client_id → tenant_id` static mapping table | Email-based discovery via `login.sailpoint.com/oauth/authorize` | Static map for MVP, email discovery for GA, or both? |
@@ -1290,9 +1322,18 @@ Break down each epic into stories using acceptance criteria from [`mcp-gateway-m
 
 ## References
 
-- `[MCP Q1-2 PRD] SailPoint MCP Server Single URL and OAuth Support` — Confluence tiny link `fIBAFAE`
-- `[MCP PRD] Tenant-Agnostic MCP Server Endpoint & OAuth Integration` — Confluence tiny link `NIDUAgE`
-- `docs/mcp-gateway.md` — concept primer
-- `docs/mcp-gateway-mvp-spec.md` — MVP specification (FR/NFR AC, decisions, exit criteria)
+### Related documents
+
+| Document | Link |
+| --- | --- |
+| **PRD 1** — Q1-2 Single URL and OAuth | [Confluence](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · [tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE) |
+| **PRD 2** — Tenant-agnostic endpoint | [Confluence](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) · [tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE) |
+| Concept primer | [`mcp-gateway.md`](mcp-gateway.md) |
+| MVP specification | [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) |
+
+### Other
+
+- [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) (PRD 1) ([tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE))
+- [\[MCP PRD\] Tenant-Agnostic MCP Server Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) (PRD 2) ([tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE))
 - [AWS — Bedrock AgentCore Gateway](https://aws.amazon.com/bedrock/agentcore/)
 - [AWS — Transform your MCP architecture: Unite MCP servers through AgentCore Gateway](https://aws.amazon.com/blogs/machine-learning/transform-your-mcp-architecture-unite-mcp-servers-through-agentcore-gateway/)

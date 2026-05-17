@@ -6,7 +6,7 @@
 **Owner:** Dattu Marneni (EM)  
 **Initiative:** [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)  
 **Jira project:** [DPDE](https://sailpoint.atlassian.net/browse/DPDE) (component: **DP-SAF**)  
-**Related docs:** [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md)
+**Related documents:** [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) · **PRD 1:** [\[MCP Q1-2 PRD\] Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · **PRD 2:** [\[MCP PRD\] Tenant-Agnostic Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
 
 ---
 
@@ -60,7 +60,7 @@ The MCP Gateway MVP delivers a **single, tenant-agnostic MCP endpoint** for Sail
 | --- | --- |
 | Dynamic Client Registration (RFC 7591) | Deferred; requires rate-limiting and abuse controls first. |
 | Developer self-service portal (`developer.sailpoint.com/mcp`) | MVP uses ISC Admin (internal-admin minimum). |
-| Email-based tenant discovery (`login.sailpoint.com` flow) | PRD 2 model; MVP uses static `client_id → tenant_id` map. |
+| Email-based tenant discovery (`login.sailpoint.com` flow) | [PRD 2](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) model; MVP uses static `client_id → tenant_id` map. |
 | FedRAMP / UAE1 regions | Separate region rollout; confirm AgentCore availability first. |
 | Multi-backend multiplexing (workflows, AIS, NERM as separate targets) | MVP: ISC tenant MCP only. |
 | Tool namespacing across domains, semantic search, gateway federation | AgentCore capabilities; productize after GA. |
@@ -83,7 +83,12 @@ The MCP Gateway MVP delivers a **single, tenant-agnostic MCP endpoint** for Sail
 
 Two PRDs exist; **MVP cannot start build** until the rows marked **Required** are approved.
 
-| # | Topic | PRD 1 (Q1-2) | PRD 2 (Tenant-agnostic) | **MVP recommendation** | Status |
+| PRD | Confluence |
+| --- | --- |
+| **PRD 1** | [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) ([tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE)) |
+| **PRD 2** | [\[MCP PRD\] Tenant-Agnostic MCP Server Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) ([tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE)) |
+
+| # | Topic | [PRD 1](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) | [PRD 2](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) | **MVP recommendation** | Status |
 | --- | --- | --- | --- | --- | --- |
 | D1 | Public hostname | `mcp.sailpoint.com` | `mcp.identitynow.com` | **`mcp.sailpoint.com`** (+ env prefixes: `mcp-dev`, `mcp-stage`) | **Required** |
 | D2 | OAuth model | Auth Code, static clients | OAuth 2.1 + PKCE + DCR | **Auth Code + PKCE + static registration**; DCR → Phase II | **Required** |
@@ -637,12 +642,21 @@ Epics are created in Jira; see [§4.1 Jira epic index](#41-jira-epic-index) for 
 
 ## 16. References
 
+### Related documents
+
+| Document | Link |
+| --- | --- |
+| **PRD 1** — Q1-2 Single URL and OAuth | [Confluence](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · [tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE) |
+| **PRD 2** — Tenant-agnostic endpoint | [Confluence](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) · [tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE) |
+| Concept primer | [`mcp-gateway.md`](mcp-gateway.md) |
+| Execution plan | [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) |
+
 ### Internal
 
 - [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704) — Initiative
 - [§4.1 Jira epic index](#41-jira-epic-index) — DPDE-1767 … DPDE-1782 (FR1 = [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768))
-- [MCP Q1-2 PRD](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support)
-- [MCP PRD — Tenant-agnostic endpoint](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/) *(link via Confluence `NIDUAgE`)*
+- [\[MCP Q1-2 PRD\] SailPoint MCP Server Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) (PRD 1) ([tiny](https://sailpoint.atlassian.net/wiki/x/fIBAFAE))
+- [\[MCP PRD\] Tenant-Agnostic MCP Server Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration) (PRD 2) ([tiny](https://sailpoint.atlassian.net/wiki/x/NIDUAgE))
 - [HLD SailPoint MCP Server](https://sailpoint.atlassian.net/wiki/spaces/~557058a92a897c42824a4792963165ed4eea38/pages/3670769784/HLD+SailPoint+MCP+Server)
 - [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration)
 - [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md)
