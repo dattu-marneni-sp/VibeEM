@@ -4,7 +4,7 @@
 **Owner:** Dattu Marneni (EM)  
 **Related:** [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) · [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway.md`](mcp-gateway.md)
 
-This kit supports **week-1 execution**, **Jira story breakdown**, spikes, stakeholder alignment, risks, competitive context, cost modeling, and the **two funding gates** (pilot → GA).
+This kit supports **week-1 execution**, **Jira story breakdown**, spikes, stakeholder alignment, risks, competitive context, cost modeling, **skills ramp** (repo-based learning), and the **two funding gates** (pilot → GA).
 
 ---
 
@@ -426,8 +426,75 @@ Partner effort (OAuth, UI, SRE, Security) not included — calendar risk, not do
 
 ---
 
+## 9. Skills ramp — learn from the repos (not from scratch)
+
+Gate 1 assumes **extend existing code**, not greenfield MCP. Building skills from the repos below **before** week-1 spikes turns discovery into validation. Full workstream skills map: [`mcp-gateway-execution-plan.md` § Workstream → Skills Map](mcp-gateway-execution-plan.md#workstream--skills-map).
+
+### 9.1 Why start now
+
+| Repo | Teaches | Gateway owns |
+| --- | --- | --- |
+| [`sp-mcp-server`](https://github.com/sailpoint-core/sp-mcp-server) | Streamable HTTP MCP, access-request tools, OAuth metadata, user bearer + `IdentityID` | **Routing to** this backend only |
+| [`sailpoint-agentcore-pdp`](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) | AgentCore Gateway IaC, interceptor hooks, audit logging | **Front door** — fork/extend |
+| [AgentCore tutorials 05 + 09](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway) | MCP-as-target, FGAC interceptor | Week-1 spikes (§3) |
+
+**Schedule risk if skipped:** Engineers learn MCP + AWS during week 1 instead of proving spikes — decision workshop and Friday demo slip.
+
+### 9.2 Depth by role (Gate 1)
+
+| Role | Primary repos / refs | Gate 1 bar (can demo or review PR) | Hours (part-time) |
+| --- | --- | --- | --- |
+| **Eng 1 — Platform** | `sailpoint-agentcore-pdp`, tutorial **05**, optional **09** | Deploy gateway; register MCP target; `tools/list` via gateway; explain interceptor extension point | **12–16** |
+| **Eng 2 — Identity** | `sp-mcp-server` (`oauth.go`, handlers), SailPoint OAuth docs, Cursor/`mcp-remote` PKCE | JWT claims documented; authorizer go/no-go; same user token works direct + via gateway | **12–16** |
+| **Eng 3 — Quality** | `test_mcp_tools.py`, [MCP Getting Started](https://developer.sailpoint.com/docs/extensibility/mcp-getting-started/) | Tenant-direct baseline green; harness ready for gateway URL; dual-path quickstart outline | **8–12** |
+| **EM** | Both repos at architecture level, §1 two gates, [backend contract](mcp-gateway-execution-plan.md#backend-contract--sp-mcp-server) | Explain gateway → `sp-mcp-server` in 5 min; block “reimplement tools in gateway” | **4–6** |
+
+### 9.3 One-week learning path (before / during week 1)
+
+| When | All roles | Eng 1 | Eng 2 | Eng 3 |
+| --- | --- | --- | --- | --- |
+| **Day 1–2** | Read [backend contract](mcp-gateway-execution-plan.md#backend-contract--sp-mcp-server); skim [mcp-gateway.md § Related Repositories](mcp-gateway.md#related-repositories) | Clone `sailpoint-agentcore-pdp` | Read `sp-mcp-server` README + OAuth paths | Run `make run` + `test_mcp_tools.py` tenant-direct |
+| **Day 3–4** | Attend decision workshop (§2.2) | Sandbox deploy + tutorial **05** target | PKCE once; decode JWT; Spike B (§3.2) | MCP Inspector on tenant URL; Spike C (§3.3) |
+| **Day 5** | Friday demo (§2.3) | `tools/list` via gateway (hardcoded upstream OK) | Authorizer go/no-go memo | Publish baseline test results |
+
+Align spikes with [§3 Technical spike briefs](#3-technical-spike-briefs).
+
+### 9.4 Gate 2 skills (weeks 5–12) — defer until Gate 2 approved
+
+| Area | Resources | When |
+| --- | --- | --- |
+| ISC Admin UI (FR7) | Ben Coble’s stack + admin API contract from week 1 | Gate 2 track “Experience” |
+| Snowflake CDC (FR9) | Data Platform patterns | Week 6+ or defer |
+| k6 / load (NFR-004–005) | k6 or Locust + AgentCore quotas | Week 7–8 |
+| SRE ORR | Runbook templates, on-call with SRE | Week 8 |
+| Marketplace / two-layer auth | [Dave Owens Confluence](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) | Post-GA / Phase II |
+
+### 9.5 Do not study yet (common traps)
+
+| Trap | Why it hurts |
+| --- | --- |
+| Reimplementing `list-requestable` / other tools in the gateway | Adds **4–8+ weeks**; Masala owns tools in `sp-mcp-server` |
+| Deep `workflow` / `transform` MCP paths | Out of MVP scope |
+| Custom JSON-RPC / SSE proxy | AgentCore already provides protocol plane |
+| Marketplace ResolveCustomer + nested service tokens | Gate 2+; not Cursor pilot |
+| FedRAMP / multi-region AgentCore | Phase II until region availability confirmed |
+
+### 9.6 Skills exit check (week 4, optional Gate 1 criterion)
+
+- [ ] Eng 1: whiteboard **AgentCore → mapping → tenant `sp-mcp-server` URL** without notes.
+- [ ] Eng 2: explain **which JWT claims** drive `tenant_id` and what happens when token expires.
+- [ ] Eng 3: run harness **tenant-direct vs gateway** in &lt;5 minutes.
+- [ ] EM: articulate **EDGE** decision (AgentCore vs `sp-gateway`) and why tools stay in Masala repo.
+
+### 9.7 If edge owner chooses sp-gateway (APIMGMT) instead of AgentCore
+
+Shift Eng 1 ramp toward [Global OAuth and MCP URLs](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/4146135316/Global+OAuth+and+MCP+URLs+for+AI+client+integration) + Lori’s `sp-gateway` work ([APIMGMT-1699](https://sailpoint.atlassian.net/browse/APIMGMT-1699)). **Still** learn `sp-mcp-server` wire contract — backend unchanged. Interceptor/routing concepts from `sailpoint-agentcore-pdp` remain useful even if Terraform target differs.
+
+---
+
 ## Document history
 
 | Version | Date | Author | Changes |
 | --- | --- | --- | --- |
 | 0.1 | 2026-05-17 | Dattu Marneni | Initial delivery kit |
+| 0.2 | 2026-05-17 | Dattu Marneni | §9 Skills ramp (repo-based learning paths) |
