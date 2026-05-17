@@ -4,7 +4,7 @@
 **Owner:** Dattu Marneni (EM)  
 **Related:** [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) · [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway.md`](mcp-gateway.md)
 
-This kit supports **week-1 execution**, **Jira story breakdown**, spikes, stakeholder alignment, risks, competitive context, cost modeling, **skills ramp** (repo-based learning), and the **two funding gates** (pilot → GA).
+This kit supports **week-1 execution**, **Jira story breakdown**, spikes, stakeholder alignment, risks, competitive context, cost modeling, **skills ramp** (repo-based learning), **success checklist**, and the **two funding gates** (pilot → GA).
 
 ---
 
@@ -198,9 +198,35 @@ Week:  1    2    3    4  |  5    6    7    8  |  9   10  | 11   12
 
 ## 4. Jira — story breakdown
 
-**Conventions:** Project **DPDE**, labels `INIT-2704`, `mcp-gateway`, component **DP-SAF**. Link stories to parent epic. Copy titles into Jira; adjust points per team.
+**Conventions:** Project **DPDE**, labels `INIT-2704`, `mcp-gateway`, component **DP-SAF**. Stories use **parent epic** (hierarchy). 
 
-### 4.1 Gate 1 — Week 1 stories (create immediately)
+**Bulk create (week 1 + weeks 2–4):**
+
+```bash
+export JIRA_API_TOKEN='…'   # Atlassian API token
+python3 scripts/create_mcp_gateway_jira_stories.py --dry-run   # preview
+python3 scripts/create_mcp_gateway_jira_stories.py           # create 44 stories
+python3 scripts/create_mcp_gateway_jira_stories.py --week1-only  # 17 stories only
+```
+
+After creation, assign Eng 1/2/3 and set sprint targets in Jira.
+
+### 4.0 Stories created in Jira (2026-05-17)
+
+**44 stories** created under INIT-2704 epics (`DPDE-1835` … `DPDE-1878`), labels `INIT-2704`, `mcp-gateway`, component **DP-SAF**.
+
+| Range / epic | Keys | Count |
+| --- | --- | --- |
+| [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) kickoff | DPDE-1835 – DPDE-1838 | 4 |
+| [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) foundation | DPDE-1839 – DPDE-1843 | 5 |
+| [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) OAuth | DPDE-1844 – DPDE-1847 | 4 |
+| [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) URL | DPDE-1848 – DPDE-1849 | 2 |
+| [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) mapping | DPDE-1850 – DPDE-1851 | 2 |
+| Weeks 2–4 (remaining epics) | DPDE-1852 – DPDE-1878 | 27 |
+
+Board filter: `project = DPDE AND labels = mcp-gateway ORDER BY created ASC`
+
+### 4.1 Gate 1 — Week 1 stories (reference — created in Jira)
 
 #### Epic [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) — Program kickoff
 
@@ -492,9 +518,81 @@ Shift Eng 1 ramp toward [Global OAuth and MCP URLs](https://sailpoint.atlassian.
 
 ---
 
+## 10. Success checklist — what “done” looks like
+
+Use this as the EM scorecard. Documentation alone does not equal success — **decisions, people, and proof** do.
+
+### 10.1 Week-1 must-haves (Gate 1 starts here)
+
+| # | Item | Owner | Done when |
+| --- | --- | --- | --- |
+| W1-1 | **Decision workshop** (§2.2) — D1–D12 + **EDGE** | EM | Decision log updated ≤24h after workshop |
+| W1-2 | **OAuth spike go/no-go** (§3.2) | Eng 2 / Rahul | Green, yellow+Cognito date, or escalated red |
+| W1-3 | **Eng 1 / 2 / 3 named** (not TBD) | EM | On execution plan + Jira assignees |
+| W1-4 | **Partner meetings booked** — Rahul, Lori, Antoine/Dave, Security | EM | Calendar invites accepted |
+| W1-5 | **`tools/list` via gateway** in dev | Eng 1 | Friday demo (hardcoded tenant OK) |
+| W1-6 | **`test_mcp_tools.py` baseline** tenant-direct | Eng 3 | Green on Masala dev URL |
+| W1-7 | **Jira week-1 stories** created under epics | EM | See §4.1; script: `scripts/create_mcp_gateway_jira_stories.py` |
+
+### 10.2 Gate 1 exit (week 4) — internal pilot
+
+| # | Criterion | Evidence |
+| --- | --- | --- |
+| G1-1 | Cursor E2E: universal URL + `client_id` → `tools/list` + one `tools/call` | Demo recording |
+| G1-2 | **2 tenants** routed correctly | Live demo or test log |
+| G1-3 | **Zero cross-tenant** in fuzz suite | CI / test output |
+| G1-4 | FR6 smoke: tenant-direct URLs unchanged | `test_mcp_tools.py` both modes |
+| G1-5 | OAuth path documented (D9) | Memo in decision log |
+| G1-6 | EDGE owner documented | Decision log row |
+| G1-7 | Honest **not in scope** list for leadership | Slide: no GA, no marketplace, no full UI |
+| G1-8 | Skills exit (optional) | §9.6 checkboxes |
+
+**Do not request Gate 2 funding** if G1-3, G1-4, or W1-2 (OAuth) are red.
+
+### 10.3 Gate 2 exit (week 12) — complete solution
+
+| # | Criterion | Evidence |
+| --- | --- | --- |
+| G2-1 | [`mcp-gateway-mvp-spec.md` §14](mcp-gateway-mvp-spec.md#14-mvp-exit-criteria-closed-beta-ready) signed off | PM + Security + SRE |
+| G2-2 | ORR complete (week 8) | SRE ticket / sign-off |
+| G2-3 | Closed beta: **5–10 tenants**, 7+ days active | Usage metrics |
+| G2-4 | Go/no-go week 10 passed | Meeting notes |
+| G2-5 | GA on canonical URL; developer quickstart live | Link + blog |
+| G2-6 | Marketplace **submitted** (if in scope) | AWS ticket (review may extend past week 12) |
+
+### 10.4 Organizational success factors
+
+| Factor | Action |
+| --- | --- |
+| **One edge owner** | AgentCore (DPDE) vs `sp-gateway` (Lori) — single paragraph, week 1 |
+| **Masala partnership** | Dave/Antoine own `sp-mcp-server`; gateway only routes |
+| **Scope discipline** | No tool reimplementation; no marketplace in Gate 1 |
+| **Friday demos** | Every week, even thin |
+| **Escalate at 5 days** | PRD or OAuth blocked (risks R1, R3) |
+| **Two-gate narrative** | Never imply “GA in 4 weeks” |
+
+### 10.5 EM weekly rhythm
+
+1. Update **decision log** after any workshop or PM change.  
+2. Send **one slide**: green / yellow / red on OAuth, edge, Masala, UI.  
+3. Review Jira: every story **assigned** or **blocked** with named blocker.  
+4. Prep **Gate 2 ask** only in week 4 with §1 checklist + demo.
+
+### 10.6 Top five gaps to close first
+
+1. EDGE owner undecided  
+2. Engineer names TBD  
+3. OAuth not proven on AgentCore  
+4. Kartik HLD not walked (30m)  
+5. Jira stories not on the board → run §4 / creation script
+
+---
+
 ## Document history
 
 | Version | Date | Author | Changes |
 | --- | --- | --- | --- |
 | 0.1 | 2026-05-17 | Dattu Marneni | Initial delivery kit |
 | 0.2 | 2026-05-17 | Dattu Marneni | §9 Skills ramp (repo-based learning paths) |
+| 0.3 | 2026-05-17 | Dattu Marneni | §10 Success checklist; §4 Jira script reference |
+| 0.4 | 2026-05-17 | Dattu Marneni | §4.0 Jira stories DPDE-1835–1878 created |
