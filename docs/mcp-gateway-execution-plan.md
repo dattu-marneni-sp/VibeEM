@@ -144,6 +144,56 @@ Confluence runbook: [MCP Access Review Requests — local](https://sailpoint.atl
 
 **Partner ask (week 1):** [ISCANT-12559](https://sailpoint.atlassian.net/browse/ISCANT-12559) / Masala — global dev URLs and env vars set on shared `mcp.api.cloud.sailpoint.com` fleet.
 
+#### Two authentication layers (from Dave Owens doc §8)
+
+[`sp-mcp-server`](https://github.com/sailpoint-core/sp-mcp-server) requires a **user** bearer with `IdentityID` (see [backend contract](#backend-contract--sp-mcp-server)). The [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) Confluence page formalizes this as:
+
+| Layer | Purpose | 4-week MVP (Cursor / internal pilot) | Post-MVP (AWS Marketplace) |
+| --- | --- | --- | --- |
+| **Layer 1** | Which **tenant** / customer agent is calling | Gateway validates JWT; `client_id → tenant_id` or custom claims (`tenant_id`, `aws_account_id`) | Marketplace-issued OAuth client credentials after ResolveCustomer |
+| **Layer 2** | Which **human user** the tools run as | **Same bearer** from Cursor PKCE → ISC user token forwarded to `sp-mcp-server` | Option A: `X-ISC-User-Token` nested header; Option B: on-demand ISC OAuth in MCP session |
+
+**4-week implication:** INIT-2704 demo is **Layer 1 + Layer 2 collapsed** into one user OAuth flow (Cursor) — not the Marketplace registration edge. Do not block the sprint on ResolveCustomer or tenant-name registration form.
+
+---
+
+### Dave Owens — Marketplace & AgentCore integration (Confluence)
+
+**Source:** [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) (Dave Owens personal space, page `4347527504`).
+
+**What it is.** Research on listing SailPoint **MCP/A2A on AWS Marketplace** while using **AgentCore Gateway** as a unified entry point with **interceptor-based routing** to existing tenant-specific MCP URLs on EKS — **API-based SaaS delivery**, not container repackaging.
+
+**How it strengthens the 4-week INIT-2704 plan**
+
+| Confluence finding | Already in our plan? | Enhancement |
+| --- | --- | --- |
+| **Interceptors route by customer identity** to tenant MCP URLs | Yes — Kartik/APIMGMT-1991, tutorial 09, PDP | **Validates** week 1–3 interceptor + mapping approach; cite page in DPDE-1781 |
+| **MCP servers as native gateway targets**; no backend rewrite | Yes — tutorial 05 + [sp-mcp-server backend contract](#backend-contract--sp-mcp-server) | Confirms **do not** containerize `sp-mcp-server` for MVP |
+| **OAuth claims** (`sub`, custom `tenant_id`, `aws_account_id`) for routing | Partial — D3 static map | Add **D11** in week 1: claim shape for mapping store vs DB-only lookup |
+| **Two auth layers** (service + end-user) | Implicit in FR2 + sp-mcp-server contract | Make explicit in MVP spec journey; gateway must **forward user token** |
+| **Option A:** `Authorization` + `X-ISC-User-Token` | Not in 4-week scope | Future Marketplace agents; document as Phase II pattern |
+| **API-based Marketplace** fits EKS-hosted MCP | N/A for 4-week | **Descoped** — internal pilot first; Marketplace is [AI-881](https://sailpoint.atlassian.net/browse/AI-881) / post-pilot |
+| Example endpoint `https://api.sailpoint.com/marketplace/gateway` | PRD uses `mcp.sailpoint.com` | **Separate products:** INIT-2704 universal URL ≠ Marketplace gateway hostname — align with Dave/Ye in week 1 |
+| **Registration edge** (tenant name form + ISC admin OAuth) | Overlaps INIT-2090 themes | Marketplace-only; **not** required for Cursor 4-week demo |
+| **ResolveCustomer** + `CustomerAWSAccountId` mapping | FR8 mapping store | Reuse **same mapping table design** for `aws_account_id → tenant_id` later |
+
+**What to descope for 4 weeks (explicitly called out in Confluence but not MVP)**
+
+- AWS Marketplace redirect fulfillment and ResolveCustomer webhook
+- Edge registration form for tenant name at subscribe time
+- Quick Launch / CloudFormation Deployment API
+- Marketplace-specific hostname (`api.sailpoint.com/marketplace/gateway`)
+- A2A listing (doc covers MCP + A2A; MVP is access-requests MCP only)
+
+**Week-1 actions with Dave Owens (Masala EM)**
+
+1. Confirm **4-week INIT-2704** = Cursor universal URL + PKCE + `sp-mcp-server` — **not** Marketplace listing.
+2. Agree **JWT / mapping contract** for interceptors (custom claims vs lookup-only).
+3. Confirm global URL work ([ISCANT-12559](https://sailpoint.atlassian.net/browse/ISCANT-12559), `SP_MCP_GLOBAL_*` env vars) is the same fleet the gateway targets.
+4. Capture whether **Option A** (`X-ISC-User-Token`) is needed before Marketplace or only for service credentials.
+
+**Coordination:** Dave Owens (author), Ye Zhu (platform), Kartik (interceptor POC), Evan Anandappa (ISC OAuth Layer 2).
+
 ---
 
 ## Initiative landscape — how INIT-2704 fits
@@ -303,7 +353,7 @@ Not AgentCore multiplexing, but **directly enables FR1** (`mcp.sailpoint.com`, `
 | [MCP Q1-2 PRD](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/) | INIT-2704 requirements source |
 | [Draft SailPoint MCP Platform Strategy](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4614226238/) | INIT-2410 / AI-881 |
 | [Q2 MCP PRD Platform Phase 1](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4853826767/) | AI-881 reference |
-| [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/) | Internal research |
+| [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) | **Dave Owens** — Marketplace + AgentCore routing research (see [§ Dave Owens — Marketplace & AgentCore doc](#dave-owens--marketplace--agentcore-integration-confluence)) |
 | [Approved MCP Servers](https://sailpoint.atlassian.net/wiki/spaces/SDLC/pages/4951474326/) | Lori’s Cursor test question |
 
 ### Quick takeaway — who already did what vs INIT-2704
@@ -331,7 +381,7 @@ Not AgentCore multiplexing, but **directly enables FR1** (`mcp.sailpoint.com`, `
 | Multiplex `/workflow/mcp`, `/transform/mcp` | Workflow/transform MCP paths in sp-mcp-server (post-MVP) |
 | Universal URL + client docs for **Cursor + Claude Desktop** (FR1) | Closed beta **5–10 tenants** (Phase 3) |
 | Structured errors + `/health` (FR11); JSON request logs, no tokens in logs (FR12) | Full Grafana suite + Snowflake dashboards (FR10) |
-| Backward-compat **smoke** on 1–2 legacy tenant URLs (FR6) | AWS Marketplace listing |
+| Backward-compat **smoke** on 1–2 legacy tenant URLs (FR6) | AWS Marketplace listing + [Dave Owens Marketplace doc](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) fulfillment |
 | Admin: **CLI or internal API** to register clients (FR7 minimum) | DCR, developer portal (Phase II) |
 | Threat model + routing fuzz tests (security gate before “done”) | Full SRE ORR + on-call (baseline MVP exit) |
 
@@ -417,8 +467,7 @@ Two external references define **how** to build; INIT-2704 / DPDE defines **what
 | --- | --- | --- |
 | **AWS AgentCore Gateway tutorials** | [awslabs/agentcore-samples — 02-AgentCore-gateway](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway) | Public; Ye Zhu / AWS deep dive (Mar 2026) |
 | **MCP Gateway and Real-Time Authorization — High Level Plan** | [Confluence (Kartik Khamborkar space)](https://sailpoint.atlassian.net/wiki/spaces/~712020303f3c3361704efaa8f88f28b4536d5d/pages/5028315398/MCP+Gateway+and+Real-Time+Authorization+High+Level+Plan) | API Management; mirrors [APIMGMT-1863](https://sailpoint.atlassian.net/browse/APIMGMT-1863) (Backlog) |
-
-> **Confluence note:** Page requires Atlassian login; content was not machine-readable in this pass. Title + Jira + completed APIMGMT tasks below infer the plan. **Week-1 action:** 30-min read with **Kartik Khamborkar**; paste any deltas into this doc or link the page from [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767).
+| **AWS Agent Core Gateway Integration** | [Dave Owens](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) | Marketplace + interceptor routing + two auth layers — [§ below](#dave-owens--marketplace--agentcore-integration-confluence) |
 
 #### What the AWS tutorial suite proves (buy vs build)
 
@@ -498,7 +547,8 @@ You are **INIT-2704** owner and integration EM. The lever is not more code — i
 | **Read** [AWS 02-AgentCore-gateway README](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway) + skim `05`, `09`, `14` | Shared vocabulary for Eng 1 / Kartik |
 | **30-min with Kartik** — walk [Confluence HLD](https://sailpoint.atlassian.net/wiki/spaces/~712020303f3c3361704efaa8f88f28b4536d5d/pages/5028315398/MCP+Gateway+and+Real-Time+Authorization+High+Level+Plan) + [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990)/[1991](https://sailpoint.atlassian.net/browse/APIMGMT-1991) | Agree: DPDE **extends** his PoC; link APIMGMT-1863 ↔ DPDE-1781 in Jira |
 | **30-min with Antoine Troadec** — [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server) global host + test tenant | Confirm [backend contract](#backend-contract--sp-mcp-server) (JWT-only vs per-tenant upstream) |
-| **Post decision memo** (D1–D7 from MVP spec) — 1 page | Unblocks Eng 2; records universal URL vs tenant URL |
+| **Post decision memo** (D1–D7 + **D11** two auth layers from MVP spec) — 1 page | Unblocks Eng 2; records universal URL vs Marketplace hostname |
+| **30-min with Dave Owens** — [Marketplace & AgentCore Confluence](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) | Confirm 4-week = Cursor path, not Marketplace; JWT claim shape |
 | **Book OAuth war room** (Evan, Rahul, Lori) — 90 min | Minimum OAuth for demo: static client + PKCE on global URL |
 | **Assign Eng 1/2/3 names** in role table above | Stops “TBD” drift |
 

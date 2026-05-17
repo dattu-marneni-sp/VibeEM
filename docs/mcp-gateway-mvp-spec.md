@@ -64,7 +64,9 @@ The MCP Gateway MVP delivers a **single, tenant-agnostic MCP endpoint** for Sail
 | FedRAMP / UAE1 regions | Separate region rollout; confirm AgentCore availability first. |
 | Multi-backend multiplexing (workflows, AIS, NERM as separate targets) | MVP: ISC tenant MCP only. |
 | Tool namespacing across domains, semantic search, gateway federation | AgentCore capabilities; productize after GA. |
-| AWS Marketplace listing | **Beta exit or GA** deliverable, not blocking closed beta. |
+| AWS Marketplace listing | **Beta exit or GA** deliverable, not blocking closed beta. Research: [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) (Dave Owens). |
+| Marketplace redirect fulfillment, ResolveCustomer, registration edge | 4-week pilot uses **ISC Admin / CLI** client registration, not AWS subscribe flow. |
+| `X-ISC-User-Token` / nested service + user tokens | MVP: single user bearer from Cursor; nested headers → Phase II (Marketplace agents). |
 | Sunset of tenant-direct URLs | No deprecation in MVP; traffic monitoring only. |
 
 ### 3.3 Stretch / descope options (PM agreement required)
@@ -93,8 +95,10 @@ Two PRDs exist; **MVP cannot start build** until the rows marked **Required** ar
 | D8 | Audit sink | Snowflake | Snowflake + alerts | **Snowflake + Grafana + alarms** | Confirm owner |
 | D9 | Cognito bridge | — | — | **Prefer direct SailPoint OAuth as `customJWTAuthorizer`**; Cognito only if spike fails | Spike in PoC |
 | D10 | Target model | — | — | **One AgentCore target per tenant** *or* one target + routing Lambda — **decide in PoC** | Spike in PoC |
+| D11 | Auth layers | — | — | **4-week:** Cursor PKCE yields **ISC user bearer** → gateway forwards to `sp-mcp-server` (Layer 1+2 collapsed). **Not** Marketplace service credentials or `X-ISC-User-Token` yet — see [Dave Owens AgentCore/Marketplace doc](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) §8 | **Required** |
+| D12 | vs AWS Marketplace | Marketplace gateway + ResolveCustomer | Universal `mcp.sailpoint.com` | **INIT-2704 ≠ Marketplace listing** in 4 weeks; reuse mapping/interceptor patterns later | Confirm with Dave Owens |
 
-**Sign-off meeting (week 1):** Ye Zhu (PM), Rahul Mishra (PM / OAuth), Dave Owens (Masala EM), Ben Coble (UI), Security delegate, SRE delegate.
+**Sign-off meeting (week 1):** Ye Zhu (PM), Rahul Mishra (PM / OAuth), Dave Owens (Masala EM — [Marketplace/AgentCore research](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration)), Ben Coble (UI), Security delegate, SRE delegate.
 
 ---
 
@@ -149,9 +153,9 @@ All epics are type **Epic**, project **DPDE**, component **DP-SAF**, labels **`I
 
 1. Admin creates MCP client in ISC Admin → receives `client_id`, redirect URIs, scopes.
 2. Developer opens MCP client → enters `https://mcp.sailpoint.com/` (or env URL) + `client_id`.
-3. OAuth PKCE flow completes → bearer token issued with `tenant_id` / scopes.
-4. Client calls `tools/list` → gateway validates JWT, resolves tenant target, returns tool catalog.
-5. Client calls `tools/call` → gateway proxies to tenant ISC MCP backend → result returned.
+3. OAuth PKCE flow completes → **ISC user** bearer token issued (Layer 2 end-user identity per [Dave Owens doc §8](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration)).
+4. Client calls `tools/list` → gateway validates JWT, resolves tenant (Layer 1 via `client_id → tenant_id` or claims), forwards **same user bearer** to [`sp-mcp-server`](https://github.com/sailpoint-core/sp-mcp-server).
+5. Client calls `tools/call` → gateway proxies to tenant `/access-requests/mcp` → `sp-mcp-server` executes tool with user context.
 
 ### 5.3 Journey B — Token expired
 

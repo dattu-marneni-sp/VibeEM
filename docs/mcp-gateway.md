@@ -151,6 +151,8 @@ There are two existing internal documents that describe the early thinking, both
 
 The current state of the approved MCP server list points to a tenant-specific endpoint (for example `https://adi-01.api.cloud.sailpoint.com/v2025/access-requests/mcp`) rather than a universal gateway URL. The universal gateway is still draft or design-stage, and the new ask is to build something that supersedes both of the above.
 
+**Related research (Dave Owens):** [AWS Agent Core Gateway Integration](https://sailpoint.atlassian.net/wiki/spaces/~978782161/pages/4347527504/AWS+Agent+Core+Gateway+Integration) documents how **AgentCore Gateway interceptors** can route Marketplace or agent traffic to existing **tenant-specific MCP URLs** on EKS (API-based SaaS listing, no container repackaging). It also defines **two authentication layers** — service/tenant identity at the gateway and **ISC user identity** at `sp-mcp-server` — which the 4-week INIT-2704 plan collapses into a single Cursor PKCE user token for the internal pilot. Full analysis: [`mcp-gateway-execution-plan.md` § Dave Owens — Marketplace & AgentCore](mcp-gateway-execution-plan.md#dave-owens--marketplace--agentcore-integration-confluence).
+
 ## Related Repositories
 
 Internal codebases and Global Initiatives that overlap with the MCP gateway ([INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)). Full MVP scope, initiative analysis, and Jira mapping: [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) (§ Initiative landscape, § Quick takeaway).
