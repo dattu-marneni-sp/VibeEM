@@ -6,7 +6,7 @@
 **Owner:** Dattu Marneni (EM)  
 **Initiative:** [INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)  
 **Jira project:** [DPDE](https://sailpoint.atlassian.net/browse/DPDE) (component: **DP-SAF**)  
-**Related documents:** [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) · **PRD 1:** [\[MCP Q1-2 PRD\] Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · **PRD 2:** [\[MCP PRD\] Tenant-Agnostic Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
+**Related documents:** [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) · [`mcp-gateway-delivery-kit.md`](mcp-gateway-delivery-kit.md) · **PRD 1:** [\[MCP Q1-2 PRD\] Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · **PRD 2:** [\[MCP PRD\] Tenant-Agnostic Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
 
 ---
 
@@ -574,8 +574,8 @@ Exact claim names **locked with OAuth team** in PoC.
 
 | Phase | Duration | Goal | MVP spec gate |
 | --- | --- | --- | --- |
-| **Accelerated (Option D)** | **4 weeks** | Internal-pilot gateway (2–3 eng + Cursor); see [execution plan § Accelerated MVP](mcp-gateway-execution-plan.md#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) | Descoped FR7 UI, FR9 Snowflake, full NFR load |
-| **Full program (Option B)** | **12 weeks total** | Pilot (wk 1–4) + hardening + beta + GA — see [execution plan § ~3 months](mcp-gateway-execution-plan.md#phased-execution-plan-baseline--3-months--12-weeks) | SC-1–SC-5 at GA |
+| **Gate 1 (Option D)** | **Weeks 1–4** | Internal pilot (2–3 eng + Cursor) — [execution plan § Accelerated MVP](mcp-gateway-execution-plan.md#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) | Pilot exit; not GA |
+| **Gate 2 (Option B)** | **Weeks 5–12** (contingent on Gate 1 demo) | Hardening + beta + GA — [delivery kit §1](mcp-gateway-delivery-kit.md#1-two-funding-gates--pilot--ga) | SC-1–SC-5 at GA |
 | 0 — Decisions | Week 1 | HLD signed; PRD D1–D12 | Required decisions approved |
 | 1 — Internal pilot | Weeks 1–4 | Same as accelerated MVP | E2E universal URL + OAuth + routing |
 | 2 — P0 hardening | Weeks 5–8 | FR1–FR12, P0 NFRs; four parallel tracks | ORR; §14 exit criteria |

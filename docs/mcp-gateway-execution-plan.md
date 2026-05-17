@@ -23,7 +23,7 @@ For background concepts, see `docs/mcp-gateway.md`.
 
 **MVP specification (canonical scope):** [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) — FR/NFR acceptance criteria, PRD decision table, architecture, exit criteria.
 
-**Related documents:** [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · **PRD 1:** [\[MCP Q1-2 PRD\] Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · **PRD 2:** [\[MCP PRD\] Tenant-Agnostic Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
+**Related documents:** [`mcp-gateway.md`](mcp-gateway.md) · [`mcp-gateway-mvp-spec.md`](mcp-gateway-mvp-spec.md) · [`mcp-gateway-delivery-kit.md`](mcp-gateway-delivery-kit.md) (week-1, Jira, RACI, risks, cost) · **PRD 1:** [\[MCP Q1-2 PRD\] Single URL and OAuth Support](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support) · **PRD 2:** [\[MCP PRD\] Tenant-Agnostic Endpoint & OAuth Integration](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)
 
 Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/INIT-2704)** in project **DPDE** (component **DP-SAF**, labels `INIT-2704`, `mcp-gateway`). Canonical index: [`mcp-gateway-mvp-spec.md` §4.1](mcp-gateway-mvp-spec.md#41-jira-epic-index). **FR1:** [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) · **Kickoff:** [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) · **PoC:** [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) · **NFRs:** [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) · **Docs/GA:** [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782). Closed duplicate: [AI-1415](https://sailpoint.atlassian.net/browse/AI-1415).
 
@@ -33,7 +33,7 @@ Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/IN
 - **Why now.** Per-tenant URLs block AWS Marketplace listing, "one-click install" in Cursor / Claude / VS Code, and competitive parity with Saviynt and Wiz, who already shipped marketplace MCP listings in mid-2025. Two PRDs already exist and the team is ready to start.
 - **Approach.** Buy the gateway plane (AgentCore Gateway, AgentCore Identity), build the SailPoint-specific glue (tenant routing, client mapping, admin UI integration, telemetry pipeline). Avoid building a JSON-RPC / SSE proxy from scratch.
 - **Target plan (this team).** **4-week MVP** with **2–3 engineers** using **Cursor + AI models** for IaC, tests, docs, and integration glue. Role split and week-by-week plan: [§ Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted). Delivers **internal-pilot-ready** gateway (E2E universal URL + OAuth + routing + thin observability); **not** full GA, marketplace, or every P0 NFR at production scale in four weeks.
-- **Baseline plan (leadership / GA).** **~3 months (12 weeks)** with **5–6 engineers + EM** (Option B below): week-1 decisions → **4-week internal pilot** (same as accelerated MVP) → **4 weeks** P0 hardening → **2 weeks** closed beta → **2 weeks** GA. Use when the ask is production GA, full ISC Admin UI, and full NFR sign-off in one program (FedRAMP remains Phase II).
+- **Baseline plan (leadership / GA).** **Two funding gates:** **Gate 1** (4 weeks, 2–3 eng) = internal pilot; **Gate 2** (weeks 5–12, 5–6 eng) = GA — approved only after week-4 demo. Full kit: [`mcp-gateway-delivery-kit.md` §1](mcp-gateway-delivery-kit.md#1-two-funding-gates--pilot--ga).
 - **Risks to flag now.** Two PRDs disagree on URL and OAuth model; AgentCore is AWS-coupled (data residency, FedRAMP); bedrock-agentcore-control APIs are new and still evolving. Accelerated timeline **requires** Week-1 PM/OAuth decisions and descoping FR7 UI + Snowflake CDC.
 
 ---
@@ -449,9 +449,9 @@ Eng 3     | test_mcp_tools.py  | Admin CLI/API      | Docs draft         | NFR-0
 All       | Demo: skeleton     | Demo: 1 tenant E2E | Demo: 2 tenants    | Demo: MVP checklist|
 ```
 
-**Week 1 — Lock & spike (no multi-week Phase 0)**
+**Week 1 — Lock & spike (no multi-week Phase 0)** — detailed calendar, workshop agenda, and spikes: [`mcp-gateway-delivery-kit.md` §2–3](mcp-gateway-delivery-kit.md#2-week-1-execution).
 
-- **Days 1–2:** Decision meeting (D1–D7 in [`mcp-gateway-mvp-spec.md` §4](mcp-gateway-mvp-spec.md#4-prd-reconciliation--decisions-required)); assign Eng 1/2/3; confirm reuse of in-flight APIMGMT/SRE AgentCore + DNS work.
+- **Days 1–2:** Decision meeting (D1–D12 in [`mcp-gateway-mvp-spec.md` §4](mcp-gateway-mvp-spec.md#4-prd-reconciliation--decisions-required)); assign Eng 1/2/3; confirm reuse of in-flight APIMGMT/SRE AgentCore + DNS work.
 - **Days 3–5:** Parallel spikes — run **`sp-mcp-server` + `test_mcp_tools.py`** direct (Eng 3 baseline); AgentCore MCP target = tenant `.../access-requests/mcp` (Eng 1); OAuth authorizer + JWKS (Eng 2).
 - **Exit:** One `tools/list` through gateway in dev with **hardcoded** tenant upstream URL (acceptable for spike only).
 
@@ -693,7 +693,8 @@ The honest read: AgentCore covers the heavy lifting on the gateway plane (protoc
 
 ## Phased Execution Plan (baseline — ~3 months / 12 weeks)
 
-> **Active target for a 2–3 engineer squad:** deliver the [Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) first (unchanged). The phases below are the **complete solution** — closed beta + GA — in **12 weeks** with **Option B** staffing (5–6 engineers + EM). Weeks 1–4 are shared with the accelerated plan; weeks 5–12 add hardening, beta, and launch.
+> **Funding:** Treat as **Gate 1** (weeks 1–4, pilot) + **Gate 2** (weeks 5–12, GA) — see [`mcp-gateway-delivery-kit.md` §1](mcp-gateway-delivery-kit.md#1-two-funding-gates--pilot--ga).  
+> **Active target for a 2–3 engineer squad:** deliver [Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) first (unchanged). Gate 2 requires week-4 approval and Option B staffing.
 
 ### Timeline at a glance
 
@@ -1109,10 +1110,12 @@ Keep these in the appendix and pull them out only if asked:
 
 ## What I'd Want To Validate Before Locking This Plan
 
-- AgentCore Gateway pricing at expected SailPoint load (need to model 1M+ requests/month with tools/list cache hits).
-- Whether SailPoint's existing OAuth server can be configured directly as `customJWTAuthorizer`, or whether Cognito is needed as a bridge.
+See also [`mcp-gateway-delivery-kit.md`](mcp-gateway-delivery-kit.md) (risks §6, cost §8, competitive §7).
+
+- AgentCore Gateway pricing at expected SailPoint load — cost skeleton §8; firm TBD after week-1 sandbox load.
+- Whether SailPoint OAuth works as `customJWTAuthorizer` — Spike B week 1.
 - FedRAMP and UAE1 region availability of AgentCore.
-- Whether the Masala (MCP) team is being absorbed, partnered with, or kept separate.
+- Masala partnership model and **edge owner** (AgentCore vs sp-gateway) — decision workshop §2.2.
 
 ## Jira Epic Index (created)
 
@@ -1137,7 +1140,7 @@ Epics exist in **DPDE**; full table in [`mcp-gateway-mvp-spec.md` §4.1](mcp-gat
 | Phase 0–1 foundation / PoC | [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781) |
 | Documentation & GA | [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) |
 
-Break down each epic into stories using acceptance criteria from [`mcp-gateway-mvp-spec.md` §7–8](mcp-gateway-mvp-spec.md#7-functional-requirements). Target **4–8 stories per epic** after Phase 0 sign-off.
+Break down each epic into stories using acceptance criteria from [`mcp-gateway-mvp-spec.md` §7–8](mcp-gateway-mvp-spec.md#7-functional-requirements). **Starter stories (week 1 + Gate 2 themes):** [`mcp-gateway-delivery-kit.md` §4](mcp-gateway-delivery-kit.md#4-jira--story-breakdown).
 
 ## References
 
