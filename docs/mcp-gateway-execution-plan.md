@@ -33,7 +33,7 @@ Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/IN
 - **Why now.** Per-tenant URLs block AWS Marketplace listing, "one-click install" in Cursor / Claude / VS Code, and competitive parity with Saviynt and Wiz, who already shipped marketplace MCP listings in mid-2025. Two PRDs already exist and the team is ready to start.
 - **Approach.** Buy the gateway plane (AgentCore Gateway, AgentCore Identity), build the SailPoint-specific glue (tenant routing, client mapping, admin UI integration, telemetry pipeline). Avoid building a JSON-RPC / SSE proxy from scratch.
 - **Target plan (this team).** **4-week MVP** with **2–3 engineers** using **Cursor + AI models** for IaC, tests, docs, and integration glue. Role split and week-by-week plan: [§ Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted). Delivers **internal-pilot-ready** gateway (E2E universal URL + OAuth + routing + thin observability); **not** full GA, marketplace, or every P0 NFR at production scale in four weeks.
-- **Baseline plan (leadership / GA).** **~6 months** with **6 engineers + EM** (Option B below): Phase 0 (3 wk) → PoC (6 wk) → MVP (8–10 wk) → closed beta → GA. Use when the ask is production GA, FedRAMP path, full ISC Admin UI, and full NFR sign-off.
+- **Baseline plan (leadership / GA).** **~3 months (12 weeks)** with **5–6 engineers + EM** (Option B below): week-1 decisions → **4-week internal pilot** (same as accelerated MVP) → **4 weeks** P0 hardening → **2 weeks** closed beta → **2 weeks** GA. Use when the ask is production GA, full ISC Admin UI, and full NFR sign-off in one program (FedRAMP remains Phase II).
 - **Risks to flag now.** Two PRDs disagree on URL and OAuth model; AgentCore is AWS-coupled (data residency, FedRAMP); bedrock-agentcore-control APIs are new and still evolving. Accelerated timeline **requires** Week-1 PM/OAuth decisions and descoping FR7 UI + Snowflake CDC.
 
 ---
@@ -632,12 +632,13 @@ You are **INIT-2704** owner and integration EM. The lever is not more code — i
 
 ### Accelerated vs baseline timeline
 
-| Milestone | Accelerated (2–3 eng + Cursor) | Baseline Option B |
+| Milestone | Accelerated only (2–3 eng + Cursor) | Full program (Option B, 12 weeks) |
 | --- | --- | --- |
-| Technical MVP (internal pilot) | **4 weeks** | ~19 weeks (P0+P1+P2 start) |
-| Full P0 FR/NFR + ORR | Weeks 5–10 (follow-on) | Week ~19 |
-| Closed beta | Week ~12+ | Week ~23 |
-| GA + marketplace | Week ~16+ | Week ~27 |
+| PRD decisions + HLD | Week 1 | Week 1 |
+| Technical MVP (internal pilot) | **Week 4** | **Week 4** ([§ Accelerated MVP](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted)) |
+| Full P0 FR/NFR + ORR | Follow-on (needs more headcount) | **Week 8** |
+| Closed beta (5–10 tenants) | — | **Week 10** |
+| GA (+ marketplace submit if in scope) | — | **Week 12** |
 
 ---
 
@@ -690,283 +691,90 @@ This is the build-vs-buy table, which directly informs the workstream breakdown.
 
 The honest read: AgentCore covers the heavy lifting on the gateway plane (protocol, auth scaffolding, scale, observability primitives). The SailPoint-specific work concentrates on **identity integration, client/tenant mapping, admin UX, telemetry pipeline, and FedRAMP / UAE1 strategy**.
 
-## Phased Execution Plan (baseline — ~6 months)
+## Phased Execution Plan (baseline — ~3 months / 12 weeks)
 
-> **Active target for a 2–3 engineer squad:** use [Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) above. The phases below are the **full-program** sequencing (Option B).
+> **Active target for a 2–3 engineer squad:** deliver the [Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) first (unchanged). The phases below are the **complete solution** — closed beta + GA — in **12 weeks** with **Option B** staffing (5–6 engineers + EM). Weeks 1–4 are shared with the accelerated plan; weeks 5–12 add hardening, beta, and launch.
 
-### Phase 0 — Reconciliation & Design (3 weeks)
-
-**Goal:** Lock product scope, pick the canonical URL, choose the OAuth model, sign off on the architecture.
-
-- Reconcile PRDs with Ye, Rahul, Dave Owens, Ben Coble.
-- Architecture review: AgentCore Gateway + SailPoint OAuth + tenant routing model.
-- Decision: AgentCore-managed JWT vs. custom Lambda authorizer.
-- Define interface between gateway and ISC tenant backends (request/response contract, headers, identity propagation).
-- Spike: AgentCore Gateway in a sandbox AWS account with a stub MCP server and a Cognito JWT (1 engineer, 3 days).
-- Cost model: estimate AgentCore + Lambda + storage at expected load (NFR-014/15).
-- Output: signed HLD, exit criteria for Phase 1.
-
-### Phase 1 — Foundation / PoC (6 weeks)
-
-**Goal:** End-to-end path working for one demo tenant, in a non-production AWS account.
-
-- AWS account, IAM roles, VPC/networking baseline.
-- AgentCore Gateway provisioned via IaC (CDK or Terraform).
-- Custom domain `mcp.sailpoint.com` (or `mcp.identitynow.com` once decided) wired via Route 53 + ACM.
-- SailPoint OAuth integrated as `customJWTAuthorizer` (or via Cognito federation if a bridge is required).
-- One AgentCore Gateway target pointing at one ISC tenant MCP backend.
-- `tools/list` and `tools/call` working end-to-end from Cursor and Claude Desktop using the universal URL.
-- CloudWatch logs flowing; minimal dashboard.
-- Output: working demo + design validation report; updated cost estimate against actuals.
-
-### Phase 2 — MVP (8–10 weeks)
-
-**Goal:** All P0 FRs and NFRs satisfied for a single primary region; ready for closed beta.
-
-The MVP runs as 8 parallel workstreams. Each is sized for one engineer (or pair) over the phase, with explicit week-by-week sequencing inside the phase.
-
-#### Sequencing Inside Phase 2
+### Timeline at a glance
 
 ```
-Week:                1   2   3   4   5   6   7   8   9   10
-WS-A Routing         |design|--build---|integrate|test|
-WS-B Auth            |design|--build---|integrate|test|
-WS-C Admin Portal              |design|------build------|test|
-WS-D Telemetry           |spike|--build---|wire----|verify|
-WS-E Error & Health  |design|build|----------------verify|
-WS-F Backward Compat                       |build harness|run|
-WS-G Performance                                |baseline|tune|sign off|
-WS-H Documentation                       |draft|review|polish|
-Cross-cutting        |IaC, CI/CD, threat model, weekly demos
+Week:     1      2      3      4      5      6      7      8      9     10     11     12
+Phase:    |-- P0 + accelerated MVP (4 wk) --|-- P2 harden (4 wk) --|P3 β|P4 GA|
+Output:   decisions + 1-tenant E2E demo     P0 FR/NFR + ORR       beta  GA
 ```
 
-Weeks 1–2 are design / spikes that unblock the longest paths (WS-A and WS-B). WS-C starts in week 3 once the auth contract with WS-B is locked. WS-G runs against the latest build from week 7.
+| Phase | Weeks | Duration | Goal | Exit |
+| --- | --- | --- | --- | --- |
+| **0** — Decisions | 1 | 1 wk | Lock D1–D12, HLD, AgentCore spike, cost model | Signed HLD; PRD reconciliation done |
+| **1** — Internal pilot | 1–4 | 4 wk | Same as [Accelerated MVP](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) | Universal URL + OAuth + routing + `tools/list`/`tools/call` for 1–2 tenants |
+| **2** — P0 hardening | 5–8 | 4 wk | All P0 FR/NFRs, admin UX, telemetry, security | ORR passed; [`mcp-gateway-mvp-spec.md` §14](mcp-gateway-mvp-spec.md#14-mvp-exit-criteria-closed-beta-ready) |
+| **3** — Closed beta | 9–10 | 2 wk | 5–10 tenants on real traffic | Go/no-go at end of week 10 |
+| **4** — GA | 11–12 | 2 wk | Launch, docs, enablement; marketplace **submit** if in scope | GA on canonical URL; 30-day metrics baseline |
 
-#### WS-A — Routing & Targets (FR3, FR4, FR8)
+**Compression levers (vs a 6-month plan):** PoC merged into the 4-week pilot; Phase 2 workstreams run in **4 parallel tracks** (not 10 serial weeks); beta and GA are **2 weeks each** with pre-staged runbooks and listing copy started in week 8.
 
-- **Goal.** Resolve every authenticated request to the correct tenant ISC backend, with sub-10ms routing overhead and zero cross-tenant leakage.
-- **Deliverables.**
-  - `client_id → tenant_id` mapping store (DynamoDB or RDS — decision in Phase 0).
-  - Mapping CRUD API behind admin auth, used by WS-C.
-  - AgentCore Gateway target provisioning automation (one target per tenant, or one target per backend with claim-based routing — pick one).
-  - Routing Lambda interceptor (if AgentCore's native routing is insufficient) that reads `tenant_id` claim and selects the target.
-  - Hot-path in-memory cache (TTL ≤ 60s) with cache-miss path to mapping store.
-  - Routing decision logs (correlated with WS-D).
-- **Acceptance.**
-  - p50 routing overhead < 10ms; p95 < 50ms (contributes to NFR-001..003).
-  - 100% of requests hit a tenant target derived only from token claims (no path/header inputs).
-  - Negative tests: tampered tokens, missing claims, revoked clients all return correct 4xx.
-- **Decisions to lock.** Mapping store choice; one-target-per-tenant vs one-target-with-routing-Lambda; cache invalidation strategy when an admin rotates a mapping.
-- **Dependencies.** WS-B (token claim shape); WS-C (admin write path); ISC tenant team (backend URL contract).
-- **Risks.** AgentCore target limits per gateway (verify in Phase 1 spike); cold-start on routing Lambda eating latency budget.
+### Phase 0 — Reconciliation & design (week 1)
 
-#### WS-B — Auth & Identity (FR2, FR5, NFR-009, NFR-010)
+Run in parallel with the first engineering spikes — not a separate 3-week gate.
 
-- **Goal.** SailPoint OAuth integrated as the gateway's authorizer; JWTs validated on every request; clear UX on token expiry.
-- **Deliverables.**
-  - Decision and implementation of `customJWTAuthorizer` config — direct against SailPoint OAuth or via Cognito as a bridge.
-  - JWKS caching strategy (refresh interval, fallback on validation endpoint outage per PRD 2 NFR3).
-  - Scope handling (e.g. `sp:mcp:all`, `mcp:read`, `mcp:submit_access_request`).
-  - Token-expired error response (`401` with `{error: "token_expired", message, hint}` and `request_id`).
-  - PKCE flow validated against Cursor / Claude Desktop / Claude Code via `mcp-remote`.
-  - VS Code header-token path validated (PRD 1 §6.1).
-- **Acceptance.**
-  - 100% of requests pass through JWT validation (NFR-010).
-  - 0 unauthenticated requests reach a backend in security tests.
-  - Round-trip from "user opens client" to "tools/list returns" under 10s in fresh browser (contributes to NFR-011).
-- **Decisions to lock.** Cognito bridge yes/no; scope taxonomy with Rahul Mishra; refresh-token lifetime; redirect URI policy for static clients.
-- **Dependencies.** Rahul Mishra (OAuth platform team) — issuer URL, JWKS endpoint, scope registration.
-- **Risks.** SailPoint OAuth not yet exposing a discovery URL compatible with `customJWTAuthorizer`; PKCE quirks across MCP clients.
+- Reconcile [PRD 1 / PRD 2](mcp-gateway-execution-plan.md#key-caveat-the-two-prds-disagree) with Ye, Rahul, Dave Owens, Ben Coble (sponsor in week 1).
+- AgentCore + SailPoint OAuth architecture review; `customJWTAuthorizer` vs Cognito bridge decision.
+- Backend contract with Masala (`sp-mcp-server`); mapping store choice (DynamoDB vs RDS).
+- 3-day sandbox spike: one AgentCore target + stub MCP + JWT.
+- Output: signed HLD-lite + week-4 demo criteria.
 
-#### WS-C — ISC Admin Portal: MCP Client Registration (FR7)
+### Phase 1 — Internal pilot (weeks 1–4)
 
-- **Goal.** Admins can create, label, view, and revoke MCP clients in the existing ISC Admin Portal.
-- **Deliverables.**
-  - "MCP Clients" section in the ISC Admin UI (with Ben Coble's team).
-  - Create flow: name, description, grant type (`Authorization code`), scopes, redirect URIs.
-  - Display generated `client_id`, link to consent screen URL.
-  - List / search / filter / revoke flows.
-  - Audit log entries on every admin action.
-  - API contract with WS-A's mapping store.
-- **Acceptance.**
-  - End-to-end: admin creates a client, developer pastes the `client_id` into Cursor, tools/list works.
-  - All actions audited; revoke is effective within 60s (cache TTL).
-- **Decisions to lock.** Whether tenant_id binding is set at client creation (PRD 1 model) or derived from the admin's own session (cleaner). Whether to expose this in the Customer-facing portal or only the SailPoint internal admin portal in MVP.
-- **Dependencies.** Ben Coble's UI team (component library, design review); ISC platform team (admin auth, audit log infra).
-- **Risks.** UI bandwidth; design review cycle; deciding scope of "labeling" (FR7 mentions it but acceptance criteria are thin).
+**Do not duplicate planning here** — follow [Accelerated MVP — 4 weeks](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) (calendar, roles, `sailpoint-agentcore-pdp` fork, `test_mcp_tools.py` baseline).
 
-#### WS-D — Telemetry, Logging & Snowflake (FR9, FR10, FR12)
+Option B adds **parallel capacity** in weeks 3–4 so Phase 2 does not restart from zero: mapping-store schema, admin API contract (even if UI slips), telemetry pipeline spike, FR6 compat harness skeleton.
 
-- **Goal.** Every request and every admin action is observable in dashboards and queryable in Snowflake within minutes.
-- **Deliverables.**
-  - Structured JSON logs from gateway: `request_id`, `client_id`, `tenant_id`, `method`, `status_code`, `latency_ms`, `timestamp`, `error_type`, `error_message`.
-  - PII / token redaction in log pipeline (no bearer tokens, no PII fields, NFR-008 + PRD 2 NFR1).
-  - CloudWatch → OpenSearch shipping for ops queries.
-  - CDC pipeline from mapping store to Snowflake (FR9).
-  - Request log shipping to Snowflake (FR12).
-  - Grafana dashboards: request rate, p50/p95/p99 latency, error rate, requests per tenant, top MCP methods, auth failures (PRD 1 §6.3 mock).
-  - CloudWatch alarms: error rate > 1% (5 min), p95 latency > 500ms (5 min), 5xx spike, auth failure spike.
-- **Acceptance.**
-  - Dashboards filterable by 1h / 6h / 24h / 7d.
-  - Alarms paged within 5 minutes of threshold breach.
-  - Snowflake queries return mapping + usage data within 15 minutes of the event.
-  - PII / token redaction passes a security review checklist.
-- **Decisions to lock.** Log retention durations; alert routing (PagerDuty / Slack / email); whether to use Grafana, Datadog, or both.
-- **Dependencies.** Data Platform / Snowflake team; Security for redaction sign-off.
-- **Risks.** Log volume / cost (1M req/month with verbose logs is non-trivial); CDC lag; PII leaks slipping through.
+### Phase 2 — P0 hardening (weeks 5–8)
 
-#### WS-E — Error Handling & Health (FR11)
+**Goal:** All P0 FRs and NFRs in one commercial region; ready for closed beta.
 
-- **Goal.** Every failure path returns a consistent envelope; clients can programmatically handle every status code we promise.
-- **Deliverables.**
-  - `GET /health` returns `{status, version, timestamp}` with HTTP 200.
-  - Error envelope `{error, message, request_id}` for all 4xx / 5xx.
-  - Status code coverage per PRD 1 FR11: 400 malformed, 401 auth failure, 403 unregistered/revoked, 502 backend bad, 503 service unavailable.
-  - Error message audit: every response includes a next-step hint (NFR-013).
-  - Stack traces only in 5xx logs, never in client responses.
-- **Acceptance.**
-  - Contract test asserts envelope shape on every status code.
-  - 100% of error responses include a `request_id` traceable in WS-D logs.
-- **Decisions to lock.** Whether to expose `request_id` in headers, body, or both; localization (likely deferred).
-- **Dependencies.** WS-D for `request_id` propagation.
-- **Risks.** Inconsistency between AgentCore default errors and our envelope (may need a Lambda response transformer).
+Four parallel tracks (each owned by one engineer; tech lead unblocks cross-track):
 
-#### WS-F — Backward Compatibility (FR6)
-
-- **Goal.** Existing tenant-specific MCP URLs continue to work, untouched, throughout MVP and beyond.
-- **Deliverables.**
-  - Test harness against existing tenant-specific endpoints in dev/staging before and after gateway deploy.
-  - Compatibility test suite covering `tools/list`, `tools/call`, error envelopes, response timing.
-  - Migration guide (paired with WS-H) showing the path from tenant URL to gateway URL.
-  - Per-tenant traffic graphs (gateway vs direct) shipped to WS-D.
-- **Acceptance.**
-  - Zero regressions on tenant-direct URLs.
-  - Test suite runs on every CI build of the gateway.
-- **Decisions to lock.** Sunset criteria for tenant-direct URLs (PRD 2 says "<5 tenants of traffic"); communication policy if/when sunset begins.
-- **Dependencies.** ISC tenant team; access to representative dev tenants.
-- **Risks.** Subtle drift in response headers/timing between gateway and direct paths.
-
-#### WS-G — Performance, Scale, Reliability (NFR-001..008)
-
-- **Goal.** Prove the gateway hits the NFRs at and beyond the target load.
-- **Deliverables.**
-  - Load test harness (k6 or Locust) parameterized by concurrency and request mix.
-  - Baseline runs at 10, 50, 100 concurrent (NFR-004).
-  - Sustained 1M-request burndown over 24h to validate NFR-005.
-  - Profiling / tuning of routing Lambda (cold start, memory, concurrency reservations).
-  - Cache effectiveness report (hit rate ≥ 95% on mapping cache).
-  - Multi-AZ failover test (NFR-007).
-  - Runbook for top 10 incident scenarios.
-- **Acceptance.**
-  - Latency: p50 < 10ms, p95 < 300ms, p99 < 500ms overhead (NFR-001..003).
-  - Error rate < 0.1% (NFR-008).
-  - Sign-off from SRE on operational readiness.
-- **Decisions to lock.** Where load tests run (separate AWS account?); SLO budgets; on-call rotation policy.
-- **Dependencies.** SRE for ORR; AgentCore service quotas confirmed with AWS.
-- **Risks.** AgentCore latency floor may already eat much of the 300ms budget; need an early reading.
-
-#### WS-H — Documentation, Setup & Migration Guides (NFR-011, NFR-012, FR1)
-
-- **Goal.** A new developer can go from "I have a SailPoint account" to "tools/list works in my MCP client" in under 10 minutes (NFR-011).
-- **Deliverables.**
-  - Setup guides for Cursor, Claude Desktop, Claude Code, VS Code (+ Continue.dev, Windsurf as best-effort).
-  - CLI token helper documentation (`@sailpoint/mcp-auth login` from PRD 1 §5.7).
-  - Troubleshooting guide for the top 10 expected error codes.
-  - Migration guide from tenant URL to gateway URL.
-  - Demo video (≤ 3 minutes) for internal enablement.
-  - Timed user test with 3+ developers (NFR-011 acceptance).
-- **Acceptance.**
-  - 3 developers configure a client end-to-end in < 10 minutes without help.
-  - Docs reviewed by DevRel and pass a copy editorial pass.
-- **Decisions to lock.** Where docs live (developer.sailpoint.com vs Confluence); ownership of ongoing updates.
-- **Dependencies.** WS-A through WS-G producing stable behavior to document; DevRel calendar.
-- **Risks.** Docs always slip last; assign a named owner with capacity reserved.
-
-#### Cross-Cutting Throughout Phase 2
-
-- **IaC.** Terraform or CDK from day one; no console-only changes.
-- **CI/CD.** Per-environment pipelines (dev → stage → preprod). Block merges on contract + perf smoke tests.
-- **Threat modeling.** STRIDE pass on routing logic and admin APIs in week 2; security sign-off before WS-A merges to main.
-- **Weekly demos.** Friday demo to PMs (Ye, Rahul) and Ben's UI lead. Trim scope explicitly each week, don't let it accrete.
-- **Cost tracking.** Cost-per-1k-requests reported weekly to validate NFR-014/15 reframing.
-
-#### Phase 2 Exit Criteria
-
-- All P0 acceptance criteria for FR1–FR12 met (FR7 admin portal at "internal-admin only" minimum; full external-admin flow may slip to Phase 3 if needed).
-- All P0 NFRs met or have a documented exception with PM agreement.
-- ORR passed with SRE.
-- Runbook published; on-call rotation defined.
-- At least one internal team using the gateway on a non-production tenant for ≥ 1 week without a P1 incident.
-
-### Phase 3 — Closed Beta (4 weeks)
-
-**Goal:** Real customers (or internal SailPoint AI use cases) on the gateway with limited blast radius. Prove operational readiness with real traffic.
-
-#### Pilot Tenant Selection
-
-- Aim for 5–10 tenants spanning at least three personas: an internal SailPoint dev team, an existing MCP preview customer, and a marketplace-target enterprise customer.
-- Selection criteria: low political risk, technically engaged contact, willingness to give weekly feedback, traffic volume that exercises (but doesn't saturate) NFR-004/005.
-- Each pilot signs a 30-day commitment with a clear exit path.
-
-#### Operational Readiness Review (ORR) Checklist
-
-- Runbook reviewed with on-call.
-- Alarm thresholds tuned with real baseline data from Phase 2.
-- Rollback plan documented (DNS swap back to direct tenant URLs).
-- Tabletop exercise: simulate a backend outage, an OAuth IdP outage, and a cross-tenant leak alert.
-- Security: independent security review of WS-A and WS-B sign-off.
-- Privacy: log redaction validated by an external reviewer.
-- Capacity: AWS service quotas raised for projected beta load.
-
-#### Beta Cadence
-
-- **Daily:** error / latency review by tech lead and SRE.
-- **Weekly:** customer feedback sync; triage top friction list; ship fixes mid-week.
-- **End of week 2:** go/no-go checkpoint to continue toward GA.
-
-#### Beta Success Criteria (Required For GA)
-
-- ≥ 5 tenants actively using the gateway for 7+ consecutive days.
-- 0 P1 incidents related to cross-tenant leakage, auth bypass, or data integrity.
-- All P0 NFRs met against real traffic for 14 consecutive days.
-- ≥ 80% of pilot customers say "I would recommend this" in feedback survey.
-- Top 5 customer-reported issues fixed and verified.
-
-### Phase 4 — General Availability (4 weeks)
-
-**Goal:** Public availability on the chosen URL with full launch communications and (if in scope) AWS Marketplace listing.
-
-#### Launch Checklist
-
-- DNS cutover plan rehearsed; rollback plan documented.
-- 24×7 on-call rotation handed to SRE; pager hygiene reviewed.
-- Status page entry created (status.sailpoint.com or equivalent).
-- Customer-facing release notes published.
-- Internal enablement: support, sales engineering, and customer success briefed and have demo access.
-
-#### AWS Marketplace Listing (If In Scope)
-
-- Listing copy written and legal-reviewed (PRD 2 §Documentation appendix has the form template).
-- Single endpoint URL confirmed (`https://mcp.identitynow.com/` per PRD 2, or chosen alternative).
-- OAuth scopes registered and documented.
-- Submission timeline: AWS marketplace review historically 2–4 weeks; start in week 1 of Phase 4.
-
-#### Communications Plan
-
-- **Internal.** All-hands lightning talk; #engineering and #product Slack announcements; customer success enablement deck.
-- **External.** Blog post on developer.sailpoint.com; LinkedIn post from product leadership; mention in next customer newsletter; community post in MCP / Cursor / Claude developer channels.
-- **Sales / GTM.** Battlecard against Saviynt and Wiz marketplace listings; one-pager for AEs.
-
-#### 30 / 60 / 90 Day Success Metrics
-
-| Metric | 30 days | 60 days | 90 days |
+| Track | Workstreams | Weeks 5–6 | Weeks 7–8 |
 | --- | --- | --- | --- |
-| Customers using gateway | 5 | 15 | 25+ |
-| Monthly request volume | 100k | 500k | 1M+ |
-| Latency p95 overhead | < 300ms | < 250ms | < 200ms |
-| Error rate | < 0.5% | < 0.2% | < 0.1% |
-| Cost per 1k requests | Document | Trending down | Within budget |
-| Marketplace listing live | In review | Live | Trending traffic |
+| **Platform** | WS-A routing (FR3, FR4, FR8), WS-E errors/health (FR11) | Mapping store + interceptor; target automation | Fuzz tests; error envelope; `/health` |
+| **Identity** | WS-B auth (FR2, FR5) | JWKS, PKCE, scopes with Rahul Mishra | Token-expiry UX; VS Code path |
+| **Experience** | WS-C admin (FR7), WS-H docs (NFR-011) | Admin API + **CLI fallback** if UI slips | ISC Admin UI minimum **or** CLI-only launch |
+| **Ops** | WS-D telemetry (FR9–12), WS-F compat (FR6), WS-G perf (NFRs) | Logs, dashboards, Snowflake CDC | Load test + ORR; compat suite in CI |
+
+```
+Week:           5        6        7        8
+Platform        |-- routing + errors --------|
+Identity        |-- OAuth + PKCE -----------|
+Experience      | admin API / CLI | docs ---|
+Ops             | telemetry | perf + ORR --|
+```
+
+**Phase 2 exit criteria:** P0 FR1–FR12 met per [`mcp-gateway-mvp-spec.md` §7–8](mcp-gateway-mvp-spec.md#7-functional-requirements); ORR with SRE; runbook + on-call; ≥ 1 internal team on gateway ≥ 1 week without P1.
+
+**If behind:** slip WS-C UI → CLI-only (week 6 decision); slip Snowflake CDC → CloudWatch-only for beta (week 7 decision).
+
+### Phase 3 — Closed beta (weeks 9–10)
+
+**Goal:** 5–10 tenants on production-like traffic; prove ops at scale.
+
+- **Week 9:** Onboard pilots (internal dev team + 2–3 preview customers); daily error/latency review; tune alarms from Phase 2 baselines.
+- **Week 10:** Go/no-go — require ≥ 5 tenants active 7+ days, 0 P1 on cross-tenant/auth/data, P0 NFRs green 14 days, top friction fixes shipped.
+- ORR items: rollback (DNS to tenant URLs), tabletop (IdP outage, backend outage, leak alert), security sign-off on routing/auth.
+
+### Phase 4 — General availability (weeks 11–12)
+
+**Goal:** Public GA on canonical URL; marketplace submission started if in scope.
+
+- **Week 11:** DNS cutover rehearsal; release notes; DevRel quickstart on developer.sailpoint.com; support/SE enablement; **marketplace listing draft submitted** (review often 2–4 weeks — start early).
+- **Week 12:** GA announcement (blog, newsletter, community); 24×7 on-call handoff to SRE; track 30-day metrics (customers, volume, p95, error rate).
+
+| Metric | 30 days post-GA |
+| --- | --- |
+| Customers on gateway | 5+ |
+| Monthly requests | 100k+ |
+| p95 gateway overhead | < 300ms |
+| Error rate | < 0.5% |
 
 ### Phase II — Post-GA (Q3+ planning)
 
@@ -1030,9 +838,9 @@ These items are **explicitly deferred** in PRD 1 and PRD 2; they get their own p
 
 ## Team Shape — Staffing Options
 
-These are starting points to pitch to leadership. All assume some shared support from OAuth, UI, and Docs teams.
+Starting points for leadership. All options assume shared support from OAuth (Rahul Mishra), UI (Ben Coble), and DevRel. **The 4-week accelerated MVP plan is unchanged** — it is the first milestone in every path below.
 
-### Option D — Accelerated MVP (2–3 engineers + EM, Cursor-assisted) **← current target**
+### Option D — Accelerated MVP only (2–3 engineers + EM, Cursor-assisted) **← current squad target**
 
 | Role | Count | Notes |
 | --- | --- | --- |
@@ -1041,55 +849,56 @@ These are starting points to pitch to leadership. All assume some shared support
 | Identity / OAuth engineer | 1 | Must-own authorizer + client E2E |
 | Quality / DX engineer | 0–1 | Strongly recommended; else EM + Eng 1 absorb tests/docs |
 
-- **Timeline:** **4 weeks** to internal-pilot MVP; **+6–8 weeks** recommended for full P0 NFRs, ISC Admin UI, Snowflake, beta (if leadership wants production-grade without adding headcount).
-- **Cursor / models:** Treat as **~1.3–1.5× effective throughput** on IaC, tests, and docs — **not** on OAuth policy, security sign-off, or cross-team calendar slips.
-- **Who does what:** [§ Accelerated MVP — Who does what](#who-does-what-2–3-engineers--em)
-- **Risk:** Two engineers without Eng 3 → docs and compat slip; FR7 UI in 4 weeks is **not realistic** without Ben Coble’s team dedicated.
+- **Timeline:** **4 weeks** → internal-pilot MVP ([§ Accelerated MVP](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted)).
+- **Not included:** closed beta, GA, full P0 NFRs at scale, ISC Admin UI, Snowflake CDC — requires Option B (or D → B handoff in week 5).
+- **Cursor / models:** **~1.3–1.5×** throughput on IaC, tests, docs — **not** on OAuth policy, security sign-off, or partner calendars.
+- **Risk:** Two engineers without Eng 3 → docs and compat slip; FR7 UI in 4 weeks is **not realistic** without Ben Coble’s team.
 
-### Option A — Lean (4 engineers + EM)
+### Option A — Lean full program (4 engineers + EM)
 
-- 1 EM
-- 1 staff/tech lead (AWS + identity)
-- 2 backend engineers (one MCP/Lambda, one telemetry/Snowflake)
-- 0.5 SDET, 0.25 SRE (shared)
+- 1 EM · 1 staff/tech lead · 2 backend (platform + telemetry) · 0.5 SDET · 0.25 SRE (shared)
 
-Risk: slower to GA (\~7–8 months), one person deep on each axis is a single point of failure, hard to parallelize WS-A through WS-D.
+- **Timeline:** **~4 months** to GA (4-week pilot + ~12 weeks hardening/beta/GA with heavy serial work).
+- **Risk:** Single points of failure per workstream; hard to run four parallel Phase 2 tracks.
 
-### Option B — Recommended (6 engineers + EM)
+### Option B — Recommended full program (5–6 engineers + EM)
 
-- 1 EM
-- 1 staff/tech lead
-- 1 senior backend (routing, AgentCore, Lambda)
-- 1 senior identity engineer (OAuth, JWT, PKCE)
-- 1 backend engineer (telemetry, Snowflake)
-- 1 frontend engineer (or a borrowed slot from Ben's UI team)
-- 0.5 SDET, 0.5 SRE
+| Role | Count | Phase 1 (wk 1–4) | Phase 2+ (wk 5–12) |
+| --- | --- | --- | --- |
+| EM | 1 | Decisions, dependencies, weekly demo | ORR, beta go/no-go, launch |
+| Staff / tech lead | 1 | AgentCore fork, routing spike | Unblock four tracks; threat model |
+| Platform engineer | 1 | Gateway IaC, targets, interceptor | WS-A, WS-E, perf |
+| Identity engineer | 1 | OAuth spike, PKCE E2E | WS-B, client flows |
+| Backend (telemetry) | 1 | Mapping store schema, logs | WS-D, WS-F, Snowflake |
+| Frontend or borrowed UI | 0.5–1 | Admin API contract | WS-C (or CLI fallback) |
+| SDET + SRE | 0.5 each | Compat harness, CI | Load test, ORR, on-call |
 
-Hits the \~6 month GA target, leaves capacity for Phase II planning in parallel.
+- **Timeline:** **12 weeks** to GA — weeks 1–4 = accelerated MVP; weeks 5–12 = [§ Phased Execution Plan (~3 months)](#phased-execution-plan-baseline--3-months--12-weeks).
+- **Effort:** ~20–22 person-months (vs ~39 in a 6-month plan) because PoC is merged into the 4-week pilot and phases are parallelized.
+- **Best fit:** Leadership wants **one funding tranche** for pilot **and** production-ready gateway without a second staffing ask.
 
-### Option C — Aggressive (8 engineers + EM)
+### Option C — Aggressive (7–8 engineers + EM)
 
-Adds a dedicated SRE, full-time SDET, and a second backend on routing/perf. Use only if leadership wants to pull GA in by 4–6 weeks or do FedRAMP in parallel.
+Adds dedicated SRE, full-time SDET, second platform engineer. **~10 weeks** to GA if scope holds (same 4-week pilot, 6-week hardening, 2-week beta+GA overlap).
+
+Use when leadership needs marketplace parity this quarter or FedRAMP discovery in parallel (FedRAMP build still Phase II).
 
 ## Timeline Snapshot
 
-**Accelerated (2–3 eng + Cursor):**
+**Option D — accelerated only (2–3 eng + Cursor):**
 
 ```
-Week:        1         2         3         4         5-12
-Phase:       |decisions| 1-tenant | harden  | pilot   | full P0 + beta
-             |+ spikes | E2E      | +admin  | package | (baseline depth)
-Outputs:     HLD-lite  demo       2 tenants docs     GA path
+Week:     1      2      3      4
+Phase:    | decisions + 1-tenant E2E pilot (unchanged) |
+Output:   HLD-lite → demo → 2 tenants → pilot sign-off
 ```
 
-**Baseline (Option B — ~6 months to GA):**
+**Option B — complete solution (~3 months / 12 weeks):**
 
 ```
-Week:        0    3    6    9    12   15   18   21   24
-Phase:       |P0--|P1-------|P2--------------|P3---|P4---|
-Outputs:     HLD  PoC       MVP              Beta  GA
-                            (P0 FR/NFRs)     (5-10 (10+
-                                              tenants) customers)
+Week:     1      2      3      4      5      6      7      8      9     10     11     12
+Phase:    |---- accelerated MVP (same as Option D) ----| harden | beta |  GA  |
+Output:   decisions → E2E demo → P0 FR/NFR + ORR → 5-10 tenants → launch
 ```
 
 ## Risks
@@ -1194,51 +1003,59 @@ This section is structured as a 7-slide deck you can lift directly. Each slide h
 
 **On the slide:**
 ```
-Week:    0    3    6    9    12   15   18   21   24
-Phase:   |P0--|P1-------|P2--------------|P3---|P4---|
-Outputs: HLD  PoC       MVP              Beta  GA
-              demo      P0 FR/NFRs       5-10  10+
-                        all met          tenants customers
+Two tracks:
+
+  A) Pilot (unchanged)     Weeks 1–4   2–3 eng + Cursor → internal demo
+
+  B) Complete solution     Weeks 1–12  5–6 eng + EM → GA
+     Wk 1     decisions + spike
+     Wk 1–4   same 4-week pilot as (A)
+     Wk 5–8   P0 hardening (4 parallel tracks)
+     Wk 9–10  closed beta (5–10 tenants)
+     Wk 11–12 GA + marketplace submit
 ```
 
 **Speaker notes.**
-- **Phase 0 (3 wks).** Not implementation — it's a hard gate to reconcile two PRDs that disagree on URL, OAuth model, and scope. Without this, we'll rewrite work.
-- **Phase 1 (6 wks).** PoC with one tenant, end to end. Validates AgentCore against our actual constraints.
-- **Phase 2 (8–10 wks).** MVP: 8 parallel workstreams covering all P0 FRs and NFRs. This is where the bulk of the team's time goes.
-- **Phase 3 (4 wks).** Closed beta with 5–10 tenants. Hard go/no-go at week 2.
-- **Phase 4 (4 wks).** GA + AWS Marketplace listing. 30/60/90 day metrics tracked from day 1.
-- **Phase II (post-GA).** DCR, dev portal, namespacing, FedRAMP, federation. Each gets its own planning.
+- **Week 1.** PRD reconciliation (sponsored meeting) runs **in parallel** with AgentCore spike — not a 3-week paper phase.
+- **Weeks 1–4.** Identical to the accelerated MVP the squad is executing now: universal URL, OAuth, routing, `tools/list` / `tools/call` for 1–2 tenants.
+- **Weeks 5–8.** Four parallel tracks (platform, identity, experience, ops) deliver all P0 FR/NFRs; ORR at week 8. Admin UI can slip to CLI if Ben’s team is constrained.
+- **Weeks 9–10.** Closed beta; hard go/no-go at end of week 10.
+- **Weeks 11–12.** GA, developer.sailpoint.com quickstart, enablement; AWS Marketplace **submission** in week 11 (review continues post-GA).
+- **Phase II (post-GA).** DCR, dev portal, FedRAMP, federation — separate planning.
 
 **Anticipated questions.**
-- *"Can we skip Phase 0 and start building?"* No. The two PRDs disagree on what URL to ship. Building before that decision is locked is throwaway work.
-- *"Can we do MVP in 4 weeks with 2–3 people?"* Yes for **internal-pilot** scope with Cursor-assisted delivery — see [Accelerated MVP](#accelerated-mvp--4-weeks-23-engineers-cursor-assisted). Not for full GA, marketplace, ISC Admin UI, or all NFRs at scale.
-- *"Can we compress to 4 months?"* Yes with Option C staffing or by descoping the admin portal (FR7) to a CLI tool in MVP. Either is worth discussing.
-- *"What slips first if we're behind?"* WS-C (admin portal) → CLI fallback. WS-G (perf tuning) → ship at higher latency, fix in patch. WS-H (docs) → cover only Cursor + Claude Desktop in launch.
+- *"Can we skip PRD reconciliation?"* No — [PRD 1 and PRD 2](mcp-gateway-execution-plan.md#key-caveat-the-two-prds-disagree) disagree on URL and OAuth; week-1 decisions are the gate.
+- *"Can we do only the 4-week pilot?"* Yes — Option D. GA requires Option B (or add headcount in week 5).
+- *"Why 3 months instead of 6?"* PoC is merged into the 4-week pilot; hardening uses parallel tracks; beta/GA are 2 weeks each with pre-staged runbooks. Tradeoff: less schedule buffer — Option C adds buffer with +2 engineers.
+- *"What slips first?"* Admin UI → CLI; Snowflake CDC → CloudWatch-only for beta; docs → Cursor + Claude Desktop only at launch.
 
 ### Slide 5 — Headcount And Timeline Ask
 
 **On the slide:**
 
-| Option | Team | MVP (technical) | GA target | Risk profile |
+| Option | Team | Week 4 (pilot) | GA target | Risk profile |
 | --- | --- | --- | --- | --- |
-| **D — Accelerated** | **2–3 eng + 0.5 EM + Cursor** | **4 weeks** (internal pilot) | **~4–5 months** (with follow-on hardening) | Partner calendars; no UI in 4 wk |
-| A — Lean | 4 eng + EM | ~15 weeks | 7–8 months | Single points of failure |
-| B — Full program | 6 eng + EM | ~19 weeks | **\~6 months** | **Balanced for GA** |
-| C — Aggressive | 8 eng + EM | ~12 weeks | 4–5 months or parallel FedRAMP | High change cost if scope shifts |
+| **D — Pilot only** | **2–3 eng + 0.5 EM + Cursor** | **Demo-ready** | Not in scope | Partner calendars; no UI in 4 wk |
+| **B — Complete solution** | **5–6 eng + EM** | Same 4-wk pilot | **Week 12 (~3 mo)** | **Recommended for GA** |
+| A — Lean | 4 eng + EM | 4 wk (stretched) | ~16 weeks (~4 mo) | Serial workstreams |
+| C — Aggressive | 7–8 eng + EM | 4 wk | ~10 weeks | Scope churn costly |
 
-**Recommend for this squad:** Option **D** for the first demoable gateway in 4 weeks; explicitly plan **weeks 5–12** (same 2–3 eng or add 1–2) to reach baseline MVP exit in [`mcp-gateway-mvp-spec.md` §14](mcp-gateway-mvp-spec.md#14-mvp-exit-criteria-closed-beta-ready), or switch to Option **B** if leadership requires GA in one funding tranche.
+**Recommend:**
 
-Option B composition: 1 EM, 1 staff/tech lead, 1 senior backend (routing/AgentCore), 1 senior identity engineer (OAuth), 1 backend (telemetry/Snowflake), 1 frontend (or borrowed from UI team), 0.5 SDET, 0.5 SRE. Plus shared support from OAuth (Rahul Mishra), UI (Ben Coble), Docs.
+1. **Now:** Option **D** — execute the **4-week accelerated MVP** (unchanged).
+2. **Week 4 decision:** Approve Option **B** staffing for weeks 5–12 if leadership wants **closed beta + GA in one program** (~20–22 person-months total vs a prior 6-month estimate).
+
+Option B: 1 EM, 1 tech lead, 2 platform/identity seniors, 1 telemetry backend, 0.5–1 UI (borrowed), 0.5 SDET, 0.5 SRE — plus OAuth and UI partner calendars.
 
 **Speaker notes.**
-- Option B is the lowest-regret choice: it hits the natural 6-month GA window and leaves capacity for Phase II planning to start in parallel from month 4.
-- Option A is achievable but every engineer is a single point of failure on a workstream. Vacation, illness, or attrition stops a workstream.
-- Option C only makes sense if leadership wants to commit to FedRAMP in parallel or beat a competitive deadline by a quarter.
+- The 4-week pilot is **not throwaway** — it is weeks 1–4 of the 12-week program.
+- Option B compresses by merging PoC into the pilot and running **four parallel tracks** in weeks 5–8; less calendar slack than a 6-month plan — mitigate with Option C or explicit descopes (CLI admin, Snowflake deferral).
+- Option A works if leadership accepts ~4 months to GA with higher attrition risk.
 
 **Anticipated questions.**
-- *"Can we build it with the existing Masala (MCP) team?"* Possibly with reshaping, but the Masala team is currently focused on the existing tenant-specific MCP server. Either we expand them, or stand up a new team with a clean charter.
-- *"What's the cost of Option B?"* Roughly 6.5 FTE engineering for 6 months ≈ 39 person-months, plus AWS infra. Infra at expected MVP load is single-digit thousands per month; we'll firm this up in Phase 0.
-- *"What happens if we say no?"* We stay on per-tenant URLs, lose the marketplace channel, lose competitive parity with Saviynt and Wiz. Phase 0 design work could happen with no incremental headcount.
+- *"Can Masala build this?"* They own `sp-mcp-server` (backend); gateway is a separate charter — coordinate, don’t duplicate tools.
+- *"Cost of Option B?"* ~5.5 FTE × 3 months ≈ **16–17 core person-months** (+ partners), plus AWS infra in single-digit $K/month at MVP load.
+- *"What if we fund only the pilot?"* We prove value in 4 weeks; GA and marketplace remain blocked until a week-5 staffing decision.
 
 ### Slide 6 — Top Risks
 
@@ -1265,18 +1082,20 @@ Option B composition: 1 EM, 1 staff/tech lead, 1 senior backend (routing/AgentCo
 
 **On the slide:**
 
-1. **Approve Option B staffing** for the MCP gateway team starting at the next planning cycle.
-2. **Approve AWS Bedrock AgentCore Gateway** as the managed-service foundation, with the explicit understanding that we accept AWS coupling in exchange for time-to-market.
-3. **Sponsor the PRD reconciliation meeting** in week 1 — Ye Zhu (PM, PRD 1), Rahul Mishra (PM, PRD 2 / OAuth lead), Dave Owens (Masala EM), Ben Coble (UI), and engineering leadership.
+1. **Approve the 4-week accelerated MVP** (Option D) — already in flight; delivers internal pilot by **week 4**.
+2. **Pre-approve Option B staffing for weeks 5–12** (5–6 engineers + EM) contingent on a successful week-4 demo — **GA at week 12 (~3 months)** from program start.
+3. **Sponsor the PRD reconciliation meeting in week 1** and **approve AgentCore Gateway** as the managed foundation (AWS coupling accepted for speed).
+
+Attendees for (3): Ye Zhu ([PRD 1](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4634738812/MCP+Q1-2+PRD+SailPoint+MCP+Server+Single+URL+and+Oauth+Support)), Rahul Mishra ([PRD 2](https://sailpoint.atlassian.net/wiki/spaces/~7120200fd8a6740fdb4ca9bd0f88f478f134a5/pages/4342448180/MCP+PRD+Tenant-Agnostic+MCP+Server+Endpoint+Oauth+Integration)), Dave Owens, Ben Coble, engineering leadership.
 
 **Speaker notes.**
-- The first two are standing decisions; the third is a one-meeting ask but it unlocks everything downstream.
-- If leadership defers (1) or (2) we can still start Phase 0 design with current capacity, but we lose the timeline.
-- Confirm in the room who will own each decision and by when.
+- Decision (1) is low risk — bounded scope, uses existing `sailpoint-agentcore-pdp` and `sp-mcp-server`.
+- Decision (2) avoids a **second funding conversation** after the demo; week-4 go/no-go is the real gate for GA spend.
+- Decision (3) unblocks URL, OAuth model, and hostname for both the pilot and the 12-week program.
 
 **Anticipated questions.**
-- *"Can you give me an answer in two weeks instead of today?"* Yes. The cost of two weeks is two weeks of GA — not material at this stage.
-- *"Who's the single owner if we say yes today?"* Dattu (EM) until a tech lead is hired/named, then jointly. PM ownership stays with Ye + Rahul jointly until reconciliation; one PM after.
+- *"Why pre-approve week 5–12?"* Partner calendars (OAuth, UI, SRE) need lead time; without it, GA slips 6–8 weeks even after a good demo.
+- *"Who owns delivery?"* EM (Dattu) + named tech lead by week 2; PM: Ye + Rahul until reconciliation, then one PM.
 
 ### Optional Backup Slides
 
@@ -1284,7 +1103,7 @@ Keep these in the appendix and pull them out only if asked:
 
 - **B1.** AgentCore Gateway architecture in detail (targets, identity, semantic search, sync model). Lift from `docs/mcp-gateway.md` §"Reference Architecture".
 - **B2.** Full FR/NFR-to-AgentCore mapping table. Lift from this doc §"How AgentCore Gateway Maps To The FRs / NFRs".
-- **B3.** Detailed Phase 2 workstream plan. Lift from this doc §"Phase 2 — MVP".
+- **B3.** Phase 2 parallel tracks (weeks 5–8). Lift from this doc §"Phase 2 — P0 hardening".
 - **B4.** Competitive benchmark — Saviynt, Wiz, GitHub MCP, Atlassian Remote MCP, Linear MCP. Lift from PRD 2 §"Competitive Benchmark" and `docs/mcp-gateway.md` §"Examples In The Wild".
 - **B5.** Cost model placeholder — fill in after Phase 0.
 

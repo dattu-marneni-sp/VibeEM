@@ -574,14 +574,15 @@ Exact claim names **locked with OAuth team** in PoC.
 
 | Phase | Duration | Goal | MVP spec gate |
 | --- | --- | --- | --- |
-| **Accelerated** | **4 weeks** | Internal-pilot gateway (2–3 eng + Cursor); see [execution plan § Accelerated MVP](mcp-gateway-execution-plan.md#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) | Descoped FR7 UI, FR9 Snowflake, full NFR load |
-| **0 — Spec & design** | 3 weeks (baseline) | This doc + HLD signed; PRD decisions D1–D7 | **Exit: all Required decisions approved** |
-| **1 — PoC** | 6 weeks (baseline) | One tenant E2E; AgentCore + domain + OAuth spike | Validates D9, D10 |
-| **2 — MVP build** | 8–10 weeks (baseline) | FR1–FR12, P0 NFRs | Workstreams WS-A–H |
-| **3 — Closed beta** | 4 weeks | 5–10 tenants; go/no-go week 2 | SC-3 |
-| **4 — GA** | 4 weeks | Production + marketplace (if in GA scope) | SC-1–SC-5 sustained |
+| **Accelerated (Option D)** | **4 weeks** | Internal-pilot gateway (2–3 eng + Cursor); see [execution plan § Accelerated MVP](mcp-gateway-execution-plan.md#accelerated-mvp--4-weeks-23-engineers-cursor-assisted) | Descoped FR7 UI, FR9 Snowflake, full NFR load |
+| **Full program (Option B)** | **12 weeks total** | Pilot (wk 1–4) + hardening + beta + GA — see [execution plan § ~3 months](mcp-gateway-execution-plan.md#phased-execution-plan-baseline--3-months--12-weeks) | SC-1–SC-5 at GA |
+| 0 — Decisions | Week 1 | HLD signed; PRD D1–D12 | Required decisions approved |
+| 1 — Internal pilot | Weeks 1–4 | Same as accelerated MVP | E2E universal URL + OAuth + routing |
+| 2 — P0 hardening | Weeks 5–8 | FR1–FR12, P0 NFRs; four parallel tracks | ORR; §14 exit criteria |
+| 3 — Closed beta | Weeks 9–10 | 5–10 tenants; go/no-go end of week 10 | SC-3 |
+| 4 — GA | Weeks 11–12 | Production + marketplace submit | SC-1–SC-5 sustained |
 
-Detailed sequencing: [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) § Phase 2.
+Detailed sequencing: [`mcp-gateway-execution-plan.md`](mcp-gateway-execution-plan.md) § Phase 2 — P0 hardening.
 
 ---
 
