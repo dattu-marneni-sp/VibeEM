@@ -40,7 +40,9 @@ Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/IN
 
 **Intent:** Ship a **working, demonstrable MCP gateway** in one sprint month: universal URL, OAuth/JWT, tenant routing, `tools/list` / `tools/call` from Cursor, minimal ops visibility. Align with existing platform work ([APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990), [SAASSRE-6461](https://sailpoint.atlassian.net/browse/SAASSRE-6461), [SAASSIGMA-6213](https://sailpoint.atlassian.net/browse/SAASSIGMA-6213)) instead of re-building DNS/gateway plumbing in parallel.
 
-**Starter code:** Extend [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) (AgentCore Gateway + PDP interceptor Terraform) per [`mcp-gateway.md` § Related Repositories](mcp-gateway.md#related-repositories) — full epic table there.
+**Starter code (gateway plane):** Extend [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) (AgentCore Gateway + PDP interceptor Terraform) per [`mcp-gateway.md` § Related Repositories](mcp-gateway.md#related-repositories).
+
+**Downstream backend (MCP tools):** [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server) — **do not reimplement** access-request tools in the gateway; route to this service per [§ Backend contract — sp-mcp-server](#backend-contract--sp-mcp-server). That contract is what makes a **4-week** gateway credible: you build the **front door**, Masala/ADI already built the **MCP product**.
 
 ### Quick takeaway — [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) de-risk map
 
@@ -53,6 +55,94 @@ Jira: **16 epics** under **[INIT-2704](https://sailpoint.atlassian.net/browse/IN
 | [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) FR4, [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) FR8, [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) FR7, [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) FR1, [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) FR6, [DPDE-1774](https://sailpoint.atlassian.net/browse/DPDE-1774) FR9, [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) FR10, [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778) FR11, [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) NFRs, [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782) Docs | **Net-new** |
 
 **In one line:** the PDP repo is a **spike accelerator** for gateway plane + audit hooks — **not** the SailPoint product (tenant routing, OAuth productization, admin, Snowflake, production NFRs). **Eng 1** should extend it; **Eng 2** still depends on [INIT-2090](https://sailpoint.atlassian.net/browse/INIT-2090) / OAuth platform delivery.
+
+### Backend contract — [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server)
+
+**Role in the 4-week goal.** The SailPoint MCP gateway is a **reverse proxy and control plane** in front of existing MCP backends. For MVP, that backend is **`sp-mcp-server`** (Masala / Harbor Pilot / ADI — Jira **ADI**, releases via `team-eng-harbor-pilot-releases`). The gateway team owns **URL, OAuth for external clients, tenant routing, mapping store, and edge policy**; this repo owns **`tools/list`, `tools/call`, and ISC API integration**.
+
+```mermaid
+flowchart LR
+  subgraph gateway ["INIT-2704 — you build"]
+    URL[Global URL + TLS]
+    OAuth[OAuth / PKCE for Cursor]
+    Map[client_id → tenant_id]
+    AC[AgentCore Gateway + interceptor]
+  end
+  subgraph backend ["sp-mcp-server — already built"]
+    MCP[MCP Streamable HTTP]
+    Tools[Access-request tools]
+    ISC[ISC APIs via Atlas]
+  end
+  Cursor --> URL
+  Cursor --> OAuth
+  URL --> AC
+  OAuth --> AC
+  Map --> AC
+  AC -->|MCP target URL| MCP
+  MCP --> Tools --> ISC
+```
+
+#### Quick takeaway — sp-mcp-server de-risk map
+
+| DPDE epic / FR | sp-mcp-server | Gateway still builds |
+| --- | --- | --- |
+| [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) **FR3** `tools/list` / `tools/call` | **Largely de-risked** — real MCP server (`mark3labs/mcp-go`, Streamable HTTP) | AgentCore target registration; proxy path; E2E from universal URL |
+| [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) **FR4** tenant routing | **N/A** — tenant today is **hostname** or Atlas token context | `client_id → tenant_id` → pick correct **upstream MCP URL** |
+| [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769) **FR2** OAuth | **Partial** — RFC 9728 protected-resource metadata + global env vars | External client OAuth at gateway; **forward user bearer** to backend |
+| [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) **FR1** URL | **Partial** — paths and global metadata hooks | DNS / sp-gateway / `mcp.api.cloud.sailpoint.com` |
+| [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) **FR6** compat | **De-risked** — legacy URLs keep working | Gateway smoke + `test_mcp_tools.py` against old and new URL |
+| [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) **FR7**, [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776) **FR8** | **N/A** | Mapping store + admin CLI/API |
+| [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779) **FR12** | **Partial** — per-tool metrics, traces, Kafka telemetry | Edge audit logs; correlate via `request_id` / headers |
+| Workflow / transform MCP | **Exists** (`/workflow/mcp`, `/transform/mcp`) | **Descoped** for 4-week MVP — access-requests only |
+
+**In one line:** **`sp-mcp-server` is FR3 for access requests**; the gateway is everything that lets Cursor use **one URL** and land on the **right tenant’s** `sp-mcp-server` with a **valid user token**.
+
+#### Wire contract (gateway ↔ backend)
+
+| Item | Contract |
+| --- | --- |
+| **Protocol** | MCP over **Streamable HTTP** ([`internal/infra/mcp.go`](https://github.com/sailpoint-core/sp-mcp-server/blob/main/internal/infra/mcp.go) — `NewStreamableHTTPServer`) |
+| **MVP path** | `POST` (and MCP session traffic) to `/{apiVersion}/access-requests/mcp` — e.g. `latest` or `v2025` |
+| **Tenant URL (today)** | `https://{tenant}.api.cloud.sailpoint.com/{version}/access-requests/mcp` |
+| **Global URL (in flight)** | `https://mcp.api.cloud.sailpoint.com/{version}/access-requests/mcp` (Lori / [APIMGMT-1699](https://sailpoint.atlassian.net/browse/APIMGMT-1699)); backend env: `SP_MCP_GLOBAL_MCP_PUBLIC_URL`, `SP_MCP_GLOBAL_AUTHORIZATION_SERVER_ISSUER` |
+| **OAuth discovery** | `GET /.well-known/oauth-protected-resource/{version}/access-requests/mcp` — gateway and backend must agree on **host** and **issuer** ([`internal/infra/oauth.go`](https://github.com/sailpoint-core/sp-mcp-server/blob/main/internal/infra/oauth.go)) |
+| **Authorization** | `Authorization: Bearer <SailPoint **user** access token>` — Atlas requires **`IdentityID`** in request context ([`web_handlers.go`](https://github.com/sailpoint-core/sp-mcp-server/blob/main/internal/infra/web_handlers.go)) |
+| **Optional headers** | `X-Sailpoint-Route-Version` — API version when gateway strips path prefix; `X-Forwarded-Host` — effective host for global metadata |
+| **MVP tools** (access-requests) | `list-requestable`, `create-access-request`, `view-access-requests`, `cancel-access-request`, `list-request-identities` |
+| **AgentCore target** | Register upstream as **MCP server target** → tenant base + `/access-requests/mcp` ([AWS tutorial 05](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway/05-mcp-server-as-a-target)); dev: `listingMode=DYNAMIC` |
+| **Do not** | Reimplement tools in gateway; strip or rewrite MCP JSON-RPC bodies; send machine-only tokens unless backend contract changes |
+
+**Week-1 confirmation with Antoine Troadec / Dave Owens:** On global host, is tenant resolved **only from JWT** (single fleet) or must gateway still route to **per-tenant hostname**? That answer picks target URL shape for AgentCore.
+
+#### Local dev and golden tests (Eng 3 / week 1)
+
+```bash
+# Backend only (baseline)
+cd sp-mcp-server && make run          # http://localhost:7100
+export BEARER=<user_token>
+python3 test_mcp_tools.py             # base_url = http://localhost:7100
+
+# Tenant-direct (FR6 compat)
+# base_url = https://{tenant}.api.cloud.sailpoint.com/v2025
+
+# After gateway
+# base_url = https://mcp.api.cloud.sailpoint.com/latest   # or mcp.sailpoint.com
+```
+
+Confluence runbook: [MCP Access Review Requests — local](https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/3710582785/MCP+Access+Review+Requests#Locally).
+
+#### How sp-mcp-server accelerates each week (4-week delivery)
+
+| Week | Gateway deliverable | sp-mcp-server role |
+| --- | --- | --- |
+| **1** | AgentCore + **one** MCP target; hardcoded tenant upstream | Prove backend with `test_mcp_tools.py` **before** gateway; copy tool names for target sync |
+| **2** | Mapping store + PKCE E2E in Cursor | Same tools via universal URL; compare direct tenant URL vs gateway latency/errors |
+| **3** | Second tenant; routing fuzz; admin CLI | Two upstream targets (or two hostnames); no backend code change if routing is correct |
+| **4** | Demo video + MVP §14 checklist | Quickstart shows **same tools** users already get on tenant URL — gateway only changes **where they connect** |
+
+**Schedule risk if ignored:** Rebuilding MCP tools or protocol in the gateway repo adds **4–8+ weeks**. Treat any “implement list-requestable in gateway” story as **out of scope**.
+
+**Partner ask (week 1):** [ISCANT-12559](https://sailpoint.atlassian.net/browse/ISCANT-12559) / Masala — global dev URLs and env vars set on shared `mcp.api.cloud.sailpoint.com` fleet.
 
 ---
 
@@ -120,6 +210,7 @@ flowchart TB
 | Universal URL / DNS / sp-gateway | INIT-2090 → APIMGMT-1699 | DPDE-1768 FR1 | Lori Van Gulick / SRE |
 | OAuth 2.1 + PKCE + JWT authorizer | INIT-2090 ← ISCINTAKE-248 | DPDE-1769 FR2 | Evan Anandappa / Rahul Mishra |
 | AgentCore gateway + PDP | INIT-2704 | DPDE-1781, partial 1779 | DPDE Eng 1 + sailpoint-agentcore-pdp |
+| **MCP tools backend (access requests)** | Masala / ADI | [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) FR3 | **Antoine Troadec** — [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server); gateway **routes only** |
 | Tenant routing / single URL IPS | INIT-2704 | DPDE-1771 FR4 | SAASSIGMA-6087 |
 | Strategic platform / marketplace | INIT-2410 | *(none — deferred)* | Ye Zhu / Maryam Agahi |
 
@@ -236,7 +327,8 @@ Not AgentCore multiplexing, but **directly enables FR1** (`mcp.sailpoint.com`, `
 | PRD decisions D1–D7 locked in **week 1** (not a 3-week Phase 0) | FedRAMP / UAE1 regions |
 | AgentCore Gateway + IaC in dev/stage; reuse platform DNS/TLS where possible | Full **ISC Admin UI** for MCP clients (FR7) |
 | SailPoint OAuth + PKCE; JWT authorizer; token-expired UX (FR2, FR5) | **Snowflake** mapping CDC + analytics (FR9) — CloudWatch first |
-| `client_id → tenant_id` store + routing to ISC tenant MCP (FR3, FR4, FR8) | **1M req/month** load proof (NFR-005) — smoke at 50–100 concurrent |
+| `client_id → tenant_id` store + routing to **sp-mcp-server** (FR4, FR8); FR3 via backend + gateway proxy | **1M req/month** load proof (NFR-005) — smoke at 50–100 concurrent |
+| Multiplex `/workflow/mcp`, `/transform/mcp` | Workflow/transform MCP paths in sp-mcp-server (post-MVP) |
 | Universal URL + client docs for **Cursor + Claude Desktop** (FR1) | Closed beta **5–10 tenants** (Phase 3) |
 | Structured errors + `/health` (FR11); JSON request logs, no tokens in logs (FR12) | Full Grafana suite + Snowflake dashboards (FR10) |
 | Backward-compat **smoke** on 1–2 legacy tenant URLs (FR6) | AWS Marketplace listing |
@@ -252,9 +344,9 @@ Assume **~0.5 EM** (you) for decisions, dependencies, and demos; **2 FTE builder
 | Role | Person (fill in) | Primary ownership | Jira epics | How Cursor / models help |
 | --- | --- | --- | --- | --- |
 | **EM / coordinator** | _TBD_ | Week-1 decision workshop; OAuth/UI/SRE dependency dates; weekly demo; acceptance sign-off against MVP spec §14 | [DPDE-1767](https://sailpoint.atlassian.net/browse/DPDE-1767) kickoff | PRD diff summaries, epic/story breakdown, status reports, Confluence-ready decision log |
-| **Eng 1 — Platform / AgentCore** | _TBD_ | IaC (Terraform/CDK), AgentCore gateway + targets, tenant routing, mapping store, error/health Lambda, perf smoke | [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781), [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770), [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771), [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776), [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778), [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) (smoke only) | Generate IaC modules, routing Lambda, contract tests, runbooks; iterate on AgentCore API from AWS docs in-repo |
-| **Eng 2 — Identity / integration** | _TBD_ | OAuth/JWT authorizer, PKCE with MCP clients, scopes, token-expired envelope, E2E client config (FR1 path) | [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769), [DPDE-1772](https://sailpoint.atlassian.net/browse/DPDE-1772), [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) | JWKS/authorizer config drafts, integration test scaffolding, Cursor/Claude Desktop config snippets |
-| **Eng 3 — Quality / DX** _(optional but recommended)_ | _TBD_ | Request logging pipeline (thin), compat harness, admin registration CLI/API, setup docs | [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779), [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773), [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782), [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) (CLI not UI), [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) (basic alarms) | k6/Locust scripts, markdown docs, OpenAPI for mapping CRUD, redaction checklist |
+| **Eng 1 — Platform / AgentCore** | _TBD_ | IaC, AgentCore gateway + **sp-mcp-server MCP targets**, tenant routing, mapping store, error/health; wire contract URLs per [§ Backend contract](#backend-contract--sp-mcp-server) | [DPDE-1781](https://sailpoint.atlassian.net/browse/DPDE-1781), [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770), [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771), [DPDE-1776](https://sailpoint.atlassian.net/browse/DPDE-1776), [DPDE-1778](https://sailpoint.atlassian.net/browse/DPDE-1778), [DPDE-1780](https://sailpoint.atlassian.net/browse/DPDE-1780) (smoke only) | AgentCore target JSON from backend paths; routing tests; no tool reimplementation |
+| **Eng 2 — Identity / integration** | _TBD_ | OAuth/JWT for Cursor; ensure **user bearer** reaches sp-mcp-server; PKCE, token-expired UX, E2E `mcp.json` | [DPDE-1769](https://sailpoint.atlassian.net/browse/DPDE-1769), [DPDE-1772](https://sailpoint.atlassian.net/browse/DPDE-1772), [DPDE-1768](https://sailpoint.atlassian.net/browse/DPDE-1768) | Align with backend RFC 9728 metadata + global issuer env vars |
+| **Eng 3 — Quality / DX** _(optional but recommended)_ | _TBD_ | **`test_mcp_tools.py` harness** (direct vs gateway URL), compat smoke, admin CLI/API, quickstart | [DPDE-1779](https://sailpoint.atlassian.net/browse/DPDE-1779), [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773), [DPDE-1782](https://sailpoint.atlassian.net/browse/DPDE-1782), [DPDE-1775](https://sailpoint.atlassian.net/browse/DPDE-1775) (CLI not UI), [DPDE-1777](https://sailpoint.atlassian.net/browse/DPDE-1777) (basic alarms) | Extend repo `test_mcp_tools.py` for gateway base_url; k6 on `tools/list` |
 
 **Shared / not on the 2–3 FTE hook** (must be calendar-bound in week 1):
 
@@ -263,7 +355,7 @@ Assume **~0.5 EM** (you) for decisions, dependencies, and demos; **2 FTE builder
 | **Rahul Mishra / OAuth** | Issuer, JWKS, static client registration, scopes | Eng 2 — entire hot path |
 | **Ben Coble / UI** | FR7 **only** if leadership insists on Admin UI in 4 weeks; otherwise API contract for CLI | Eng 3 — admin flows |
 | **SRE / APIMGMT / SAASSRE** | Global URL, DNS, CloudFront, sp-gateway alignment | Eng 1 — FR1 TLS hostname |
-| **ISC / Masala** | Stable tenant MCP backend URL + test tenant | E2E demo |
+| **Antoine Troadec / Masala** | Dev/stage **sp-mcp-server** URL, test tenant, user token, global env vars on shared host | E2E demo; FR3 tool behavior |
 | **Security** | 2–4 hr threat-model review + sign-off on routing tests | Week 4 “done” |
 | **Data Platform** | Snowflake path | Post–week 4 (FR9) |
 
@@ -272,35 +364,35 @@ Assume **~0.5 EM** (you) for decisions, dependencies, and demos; **2 FTE builder
 ```
 Week:     1                    2                    3                    4
           |--------------------|--------------------|--------------------|--------------------|
-Eng 1     | IaC + AgentCore    | Targets + routing  | Mapping + errors   | Perf smoke + fixes |
-          | spike (reuse       | + mapping v0       | + log shipping     | + handoff runbook  |
-          | APIMGMT work)      |                    | (CW)               |                    |
+Eng 1     | IaC + AgentCore    | sp-mcp-server      | Mapping + errors   | Perf smoke + fixes |
+          | + 1 MCP target     | target + routing   | + log shipping     | + handoff runbook  |
+          | (tenant URL)       | v0                 | (CW)               |                    |
 Eng 2     | OAuth/JWT spike    | PKCE E2E Cursor    | Multi-tenant +     | Token UX + sec     |
           | + D1–D7 decisions  | tools/list,call    | revoke + 401/403   | test fixes         |
-Eng 3     | Compat harness     | Admin CLI/API      | Docs draft         | NFR-011 timed test |
-(or EM)   | skeleton           | + FR6 smoke        | Cursor+Claude      | + demo recording   |
+Eng 3     | test_mcp_tools.py  | Admin CLI/API      | Docs draft         | NFR-011 timed test |
+(or EM)   | baseline vs GW     | + FR6 smoke        | Cursor+Claude      | + demo recording   |
 All       | Demo: skeleton     | Demo: 1 tenant E2E | Demo: 2 tenants    | Demo: MVP checklist|
 ```
 
 **Week 1 — Lock & spike (no multi-week Phase 0)**
 
 - **Days 1–2:** Decision meeting (D1–D7 in [`mcp-gateway-mvp-spec.md` §4](mcp-gateway-mvp-spec.md#4-prd-reconciliation--decisions-required)); assign Eng 1/2/3; confirm reuse of in-flight APIMGMT/SRE AgentCore + DNS work.
-- **Days 3–5:** Parallel spikes — AgentCore + one target (Eng 1); OAuth authorizer + JWKS (Eng 2); repo scaffold, CI, compat test skeleton (Eng 3 or Cursor agent).
-- **Exit:** One `tools/list` through gateway in dev with **hardcoded** tenant mapping (acceptable for spike only).
+- **Days 3–5:** Parallel spikes — run **`sp-mcp-server` + `test_mcp_tools.py`** direct (Eng 3 baseline); AgentCore MCP target = tenant `.../access-requests/mcp` (Eng 1); OAuth authorizer + JWKS (Eng 2).
+- **Exit:** One `tools/list` through gateway in dev with **hardcoded** tenant upstream URL (acceptable for spike only).
 
 **Week 2 — One tenant end-to-end**
 
-- Eng 1: Mapping store (DynamoDB preferred for speed) + target wiring.
-- Eng 2: PKCE flow in Cursor; `tools/call` on one real ISC tenant.
-- Eng 3: CloudWatch structured logs; start FR1 quickstart doc.
+- Eng 1: Mapping store (DynamoDB preferred for speed) + AgentCore target per [backend contract](#backend-contract--sp-mcp-server).
+- Eng 2: PKCE flow in Cursor; `tools/call` (`list-requestable` or `create-access-request`) on one real tenant via gateway.
+- Eng 3: CloudWatch structured logs; quickstart with same tools as tenant-direct URL.
 - **Exit:** Demo from Cursor using universal URL + `client_id` (record for stakeholders).
 
 **Week 3 — Harden path & admin without UI**
 
 - Eng 1: Routing cache, error envelope, `/health`; negative routing tests.
 - Eng 2: Revoked client, expired token, scope gaps.
-- Eng 3: Admin **CLI/API** for client + mapping CRUD; backward-compat smoke vs legacy tenant URL.
-- **Exit:** Second tenant on same gateway; zero cross-tenant failures on fuzz suite.
+- Eng 3: Admin **CLI/API** for client + mapping CRUD; **FR6** — `test_mcp_tools.py` against legacy `{tenant}.api.cloud...` and gateway URL.
+- **Exit:** Second tenant upstream; zero cross-tenant failures on fuzz suite (`tools/call` must not hit wrong tenant’s sp-mcp-server).
 
 **Week 4 — Pilot-ready package**
 
@@ -405,6 +497,7 @@ You are **INIT-2704** owner and integration EM. The lever is not more code — i
 | --- | --- |
 | **Read** [AWS 02-AgentCore-gateway README](https://github.com/awslabs/agentcore-samples/tree/main/01-tutorials/02-AgentCore-gateway) + skim `05`, `09`, `14` | Shared vocabulary for Eng 1 / Kartik |
 | **30-min with Kartik** — walk [Confluence HLD](https://sailpoint.atlassian.net/wiki/spaces/~712020303f3c3361704efaa8f88f28b4536d5d/pages/5028315398/MCP+Gateway+and+Real-Time+Authorization+High+Level+Plan) + [APIMGMT-1990](https://sailpoint.atlassian.net/browse/APIMGMT-1990)/[1991](https://sailpoint.atlassian.net/browse/APIMGMT-1991) | Agree: DPDE **extends** his PoC; link APIMGMT-1863 ↔ DPDE-1781 in Jira |
+| **30-min with Antoine Troadec** — [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server) global host + test tenant | Confirm [backend contract](#backend-contract--sp-mcp-server) (JWT-only vs per-tenant upstream) |
 | **Post decision memo** (D1–D7 from MVP spec) — 1 page | Unblocks Eng 2; records universal URL vs tenant URL |
 | **Book OAuth war room** (Evan, Rahul, Lori) — 90 min | Minimum OAuth for demo: static client + PKCE on global URL |
 | **Assign Eng 1/2/3 names** in role table above | Stops “TBD” drift |
@@ -457,10 +550,10 @@ You are **INIT-2704** owner and integration EM. The lever is not more code — i
 
 | Week | Eng 1 (Platform) | Eng 2 (Identity) | Eng 3 / EM |
 | --- | --- | --- | --- |
-| **1** | Fork **sailpoint-agentcore-pdp**; add 1× MCP target (tutorial **05**); reuse APIMGMT-1990 gateway | OAuth authorizer spike; JWT claims doc | Compat harness; **EM:** Kartik sync + D1–D7 memo |
-| **2** | Mapping store → pick target per `client_id`; optional **08** headers | PKCE E2E in Cursor on Lori’s global URL | Quickstart draft |
-| **3** | Interceptor: **09** scope filter + tenant deny; error envelope | Revoked/expired token tests | Admin CLI; FR6 smoke |
-| **4** | CloudWatch logs + `/health`; 2-tenant fuzz | Token UX polish | Demo video; §14 checklist; **EM:** pilot sign-off |
+| **1** | Fork **sailpoint-agentcore-pdp**; AgentCore target = tenant **`/access-requests/mcp`** (tutorial **05**) | OAuth spike; user bearer contract with Masala | **`test_mcp_tools.py`** baseline; **EM:** Kartik + Antoine sync |
+| **2** | Mapping store → upstream URL per `client_id`; optional **08** headers | PKCE E2E on Lori’s global URL → sp-mcp-server tools | Quickstart (same tools, new URL) |
+| **3** | Interceptor **09** + tenant routing deny; error envelope | Token tests; wrong-tenant fuzz | Admin CLI; FR6 dual-URL smoke |
+| **4** | CloudWatch + `/health`; 2-tenant E2E | Token UX | Demo video; §14 checklist; **EM:** pilot sign-off |
 
 ### Accelerated vs baseline timeline
 

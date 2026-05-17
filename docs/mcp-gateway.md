@@ -194,6 +194,22 @@ Internal codebases and Global Initiatives that overlap with the MCP gateway ([IN
 
 **AWS docs.** [Gateway interceptors](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors.html) · [Interceptor payload types](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors-types.html) · [MCP server targets](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-target-MCPservers.html)
 
+### [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server) (`sailpoint-core`)
+
+**What it is.** The **downstream MCP backend** for ISC access requests (and additional paths for workflow/transform). Go service on Atlas: Streamable HTTP MCP, real `tools/list` and `tools/call`, integration with Request Center and related ISC APIs. Owned by Masala / ADI (Harbor Pilot).
+
+**What it is not.** The universal MCP gateway — no `client_id → tenant_id` multiplexing at scale, no AgentCore front door, no external Cursor OAuth productization (those are INIT-2704 / DPDE).
+
+**MVP path.** `https://{tenant}.api.cloud.sailpoint.com/{version}/access-requests/mcp` today; global host `mcp.api.cloud.sailpoint.com` in flight with RFC 9728 metadata env vars (`SP_MCP_GLOBAL_MCP_PUBLIC_URL`, `SP_MCP_GLOBAL_AUTHORIZATION_SERVER_ISSUER`).
+
+**4-week implication.** Gateway team **routes** to this service; **does not reimplement** tools. Golden test: repo `test_mcp_tools.py`. Full wire contract: [`mcp-gateway-execution-plan.md` § Backend contract — sp-mcp-server](mcp-gateway-execution-plan.md#backend-contract--sp-mcp-server).
+
+| Epic | Relationship |
+| --- | --- |
+| [DPDE-1770](https://sailpoint.atlassian.net/browse/DPDE-1770) FR3 | **Largely de-risked** — MCP protocol + access-request tools exist |
+| [DPDE-1771](https://sailpoint.atlassian.net/browse/DPDE-1771) FR4 | Gateway picks correct upstream URL per mapping |
+| [DPDE-1773](https://sailpoint.atlassian.net/browse/DPDE-1773) FR6 | Tenant-direct URLs remain valid; use for compat harness |
+
 ### Other in-flight work (coordinate, not duplicate)
 
 | Item | Role |
@@ -233,6 +249,7 @@ An MCP gateway is the enterprise control plane for AI tool use — a reverse pro
 - [SailPoint MCP Server Announcement](https://sailpoint.atlassian.net/wiki/spaces/PMO/pages/4244439556/SailPoint+MCP+Server+Announcement)
 - Jira epic: [External (Customer-facing) MCP Gateway — AI-881](https://sailpoint.atlassian.net/browse/AI-881)
 - GitHub: [sailpoint-agentcore-pdp](https://github.com/sailpoint-core/sailpoint-agentcore-pdp) — AgentCore Gateway + PDP audit interceptor (see [Related Repositories](#related-repositories))
+- GitHub: [sp-mcp-server](https://github.com/sailpoint-core/sp-mcp-server) — ISC MCP backend (access requests); gateway routes here (see [Related Repositories](#related-repositories))
 
 ### External
 
