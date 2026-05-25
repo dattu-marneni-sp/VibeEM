@@ -19,7 +19,7 @@ JIRA_USER = "dattu.marneni@sailpoint.com"
 PROJECT = "DPDE"
 COMPONENT_ID = "38674"  # DP-SAF
 LABELS = ["INIT-2704", "mcp-gateway"]
-DOC_LINK = "docs/mcp-gateway-delivery-kit.md §4"
+DOC_LINK = "docs/mcp-platform/gateway/mcp-gateway-delivery-kit.md §4"
 
 
 def adf_description(body: str) -> dict:
