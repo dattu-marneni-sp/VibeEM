@@ -2,3 +2,47 @@
 Data Engineering team confluence space: https://sailpoint.atlassian.net/wiki/spaces/data/overview
 
 Dattu Marneni personal confluence space: https://sailpoint.atlassian.net/wiki/spaces/~712020a38ff96a4ed542b7aa579a70237b79ae/overview
+
+---
+
+## Data Engineering Repository Inventory (GitHub-Verified) — Aug 2026
+
+- **Confluence:** https://sailpoint.atlassian.net/wiki/spaces/data/pages/5502534242/Data+Engineering+Repository+Inventory+GitHub-Verified+Aug+2026
+- **Tiny link:** https://sailpoint.atlassian.net/wiki/x/YgL6RwE
+- **Local mirror:** Team/Data Engineering Repository Inventory - Confluence body.md
+- **Companion page (not replaced):** [Data Engineering Components & Services](https://sailpoint.atlassian.net/wiki/spaces/data/pages/4654104666)
+
+GitHub-API-verified inventory of every repo owned by, or granted to, the Data Engineering / Data Platform team (generated 2026-08-27). **Team grant ≠ ownership** — read CODEOWNERS, not just team grants.
+
+### Headline numbers
+
+| Bucket | Count |
+| --- | --- |
+| DE estate (primary/co-primary owner or only grant) | **58** |
+| — DE sole primary owner | 32 |
+| — DE co-primary owner | 12 |
+| — No CODEOWNERS root rule | 14 |
+| Platform access only (other team owns code) | **26** |
+| Total with a DE signal | **84** |
+
+### Ownership teams (where repo ownership actually lives)
+
+| Team | Repos granted | Role |
+| --- | --- | --- |
+| `dipo` | 54 | DIP platform umbrella — broadest grant |
+| `scrum-data-platform` | 26 | Streaming / DIP core; most current work |
+| `fast-data` | 20 | Flink DataStream, IDA/IAI pipelines, materializers |
+| `scrum-data-governance` | 9 | EDM, ACL, lakehouse, data catalog |
+
+Note: `sailpoint/data-platform` is people-only (25 members, 0 repos).
+
+### Sections in the full inventory
+
+1. DE sole primary owner (32 repos)
+2. DE co-primary owner (12 repos)
+3. DE grant, no CODEOWNERS root rule (14 repos) — cleanup candidate
+4. Platform access only — owned by other teams (26 repos)
+5. Deltas vs. Components & Services page (missing repos, deleted repos, factual corrections)
+6. Housekeeping candidates (no push in 12+ months)
+7. Reproduction method (`gh` team grants + CODEOWNERS sweep)
+8. Caveats (admin scope, case sensitivity, org transfers, ambiguous ownership)
