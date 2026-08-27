@@ -96,6 +96,7 @@ _TBD_
 ## References
 
 - [Agentic Data Model and Infrastructure - Data Platform PRD (Short Form)](https://sailpoint.atlassian.net/wiki/spaces/data/pages/5044535487/Agentic+Data+Model+and+Infrastructure+-+Data+Platform+PRD+Short+Form)
+- [SAF Lucidchart Working Page](https://lucid.app/lucidchart/42a26f39-6e41-4a0c-b625-aad056d98464/edit?view_items=5OUUqn_MLY~o&page=2SpUWO3IojHt&invitationId=inv_3f0e13cd-dcef-44dc-b8a4-032a970258c6)
 - _Add more docs, tickets, designs, dashboards, or related notes here._
 
 ## Working Notes
