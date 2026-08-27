@@ -3,6 +3,14 @@ Data Engineering team confluence space: https://sailpoint.atlassian.net/wiki/spa
 
 Dattu Marneni personal confluence space: https://sailpoint.atlassian.net/wiki/spaces/~712020a38ff96a4ed542b7aa579a70237b79ae/overview
 
+Kafka topic CAB approval (repo quick reference): Team/Kafka Topic CAB Approval
+
+Key Confluence pages for new Kafka topics:
+    SaaS Change Approval Board (CAB): https://sailpoint.atlassian.net/wiki/spaces/SAAS/pages/395871714/SaaS+Change+Approval+Board+CAB
+    Entity Topic Creation — CAB Approval Checklist: https://sailpoint.atlassian.net/wiki/spaces/data/pages/5265162375/Entity+Topic+Creation+CAB+Approval+Checklist
+    How to create and deploy a new Kafka Topic: https://sailpoint.atlassian.net/wiki/spaces/EP1/pages/183337155/How+to+create+and+deploy+a+new+Kafka+Topic
+    How to create and deploy via saas-kafka-artifacts: https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/3450143301/How+to+create+and+deploy+a+new+kafka+topic+via+saas-kafka-artifacts
+
 ---
 
 ## Data Engineering Repository Inventory (GitHub-Verified) — Aug 2026
