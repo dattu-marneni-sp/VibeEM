@@ -1,0 +1,35 @@
+This page covers all Data Engineering intern Projects
+
+3 months internship program
+
+
+Observability & support engineering
+Extend or harden what you already started locally (e.g. scripts/weekly_de_support_report.py): richer summaries, links to Rootly/Slack runbooks, reliability metrics, or small Tech Ops doc improvements (linked from Team/Observability).
+
+Developer experience across many repos
+With dozens of *-dip / platform repos, interns often succeed on templates, scaffolding, READMEs, “how to run locally,” or a script to refresh data-engineering-own-git-repo-list from GitHub so it stays accurate.
+
+Data quality / governance (bounded)
+Governance stream + repos touching expectations / violations / lakehouse suggest intern-sized work: document data contracts, add tests around known pipelines, or improve monitoring for a single service family.
+
+Streaming / Flink slice
+A narrow Flink or connector task (one job, one topic family, metrics only) is typical intern scope, provided an engineer owns architecture review.
+
+Orchestration / analytics engineering
+Airflow and dbt-named repos in the list point to classic intern projects: DAG cleanup, dbt test coverage, lineage docs, or staging env improvements—with clear acceptance criteria.
+
+Cross-team “glue”
+Anything that improves incident routing clarity (Rootly + Slack channels you documented) or on-call ergonomics is often valued and scope-controllable.
+
+Test coverage enhancement (bounded)
+Goal: improve reliability and maintainability by raising automated test coverage in critical or low-coverage areas—not chasing a vanity percentage across every repo.
+Learning: software quality assurance, testing strategy (unit vs integration), fixtures/mocking, CI signals, and maintainable test design.
+Scope guardrails: pick one or two services or one dbt project family from data-engineering-own-git-repo-list; agree with a staff engineer on “critical paths” (e.g. ingestion edge cases, transforms, failure modes). Prefer fast unit tests and targeted integration tests over flaky end-to-end sprawl.
+Deliverables: baseline coverage or test inventory for chosen surfaces; new tests with clear names and ownership; short doc on how to run tests locally and in CI; optional threshold or “no regression” check only where the team already uses that pattern.
+
+Legacy cleanup (repos, warehouse objects, DIPs, DAGs) — inventory-first, delete-last
+Goal: reduce confusion, cost, and incident surface from **stale** Git repos, Snowflake (or warehouse) tables/views, DIPs, or Airflow DAGs—without breaking production consumers.
+Learning: data lineage, ownership, change management, safe deprecation patterns, and how “unused” is proven with evidence (queries, logs, dependency graphs), not guesses.
+Scope guardrails: **Phase 1 always read-only**—build a **sunset candidate list** with last-access or job-run metadata, upstream/downstream from dbt/Airflow/Flink docs, and explicit **owner sign-off**. No drops or repo archival in production paths until a named engineer approves each item. Prefer one domain (e.g. one DIP family, one dbt project, or one Airflow deployment) per intern cycle.
+Deliverables: spreadsheet or Confluence page of candidates with evidence columns; “safe to deprecate” vs “needs review” tiers; PRs for **documentation** and **non-breaking** changes first (archive readmes, DAG `is_paused`/doc-only, dbt model deprecation comments); optional automation sketch (query or script) to refresh the inventory. Actual deletes/archivals only where the team’s runbook says so and after approval.
+Risks to flag in the charter: downstream dashboards, reverse ETL, legal/retention, and **name reuse** after drops—intern project should **not** own silent production deletes.
