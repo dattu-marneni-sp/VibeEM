@@ -1,0 +1,88 @@
+
+Kafka topic creation — CAB approval (Data Engineering quick reference)
+
+Use this when requesting a new Kafka topic that requires SaaS Change Approval Board (CAB) sign-off. DevOps / Team Keel provisions topics after approval.
+
+
+Who to ping
+
+    DevOps / Team Keel — Kafka platform owners; they provision topics after CAB approval.
+        Keel stakeholder for Kafka: Sravani Goriparthi
+
+    #team-eng-saas-cab — first stop for questions and getting on the CAB agenda.
+        Confluence: SaaS Change Approval Board (CAB)
+        https://sailpoint.atlassian.net/wiki/spaces/SAAS/pages/395871714/SaaS+Change+Approval+Board+CAB
+
+    Dattu Marneni — Data stakeholder in Kafka Guild (internal ally for Data Engineering).
+
+    #eng-architecture — required for Entity Topic ALT / architecture review before CAB.
+        https://sailpoint.slack.com/archives/C063FQJ8J48
+
+
+CAB schedule
+
+    Tuesdays @ 8:35a CT
+    Thursdays @ 3:05p CT
+
+    Add your request to the SaaS Change Approval Board (CAB) agenda before the meeting.
+    For urgent approval when you cannot wait for the next meeting, ask in #team-eng-saas-cab for async CAB review.
+
+
+Process overview
+
+    Choose the path that matches your topic type:
+
+
+Path A — Entity topic (separate, more involved)
+
+    1. Complete the Entity Topic Creation — CAB Approval Checklist:
+       https://sailpoint.atlassian.net/wiki/spaces/data/pages/5265162375/Entity+Topic+Creation+CAB+Approval+Checklist
+
+    2. Get ALT / Entity Topic Review first — post in #eng-architecture for approval.
+
+    3. After architecture approval, add the request to the CAB agenda and attend a CAB session.
+
+    Related Confluence (entity topics):
+        Producing and Owning an Entity Topic
+        https://sailpoint.atlassian.net/wiki/spaces/data/pages/4205970165/Producing+and+Owning+an+Entity+Topic
+
+        Entity Topic Implementation Checklist
+        https://sailpoint.atlassian.net/wiki/spaces/data/pages/4253614219/Entity+Topic+Implementation+Checklist
+
+        So you want to create an entity topic
+        https://sailpoint.atlassian.net/wiki/spaces/SAAS/pages/2599158328/So+you+want+to+create+an+entity+topic...
+
+
+Path B — Regular (non-entity) topic
+
+    1. Add an entry to the SaaS Change Approval Board (CAB) agenda:
+       https://sailpoint.atlassian.net/wiki/spaces/SAAS/pages/395871714/SaaS+Change+Approval+Board+CAB
+
+    2. Be ready to answer at CAB:
+        - What is the purpose of the topic?
+        - How many partitions do you need?
+        - If org-scoped, why?
+
+    3. After CAB approval, open a PR in saas-kafka-artifacts (see deployment reference below).
+
+
+Deploy after CAB approval
+
+    How to create and deploy a new Kafka Topic (general):
+    https://sailpoint.atlassian.net/wiki/spaces/EP1/pages/183337155/How+to+create+and+deploy+a+new+Kafka+Topic
+
+    How to create and deploy a new kafka topic via saas-kafka-artifacts (PR workflow):
+    https://sailpoint.atlassian.net/wiki/spaces/ISC/pages/3450143301/How+to+create+and+deploy+a+new+kafka+topic+via+saas-kafka-artifacts
+
+    Kafka best practices (org / pod / global scoping):
+    https://sailpoint.atlassian.net/wiki/spaces/IPS/pages/1840546573/Kafka+Best+Practices
+
+    Repo: https://github.com/sailpoint/saas-kafka-artifacts
+
+
+Data Engineering context
+
+    Entity live tables consume compacted Kafka entity topics — see docs/entity-live-table-onboarding-how-to.md after the source topic exists.
+
+    For entity topic operations (Keel runbook):
+    https://sailpoint.atlassian.net/wiki/spaces/SAAS/pages/5259297232/Entity+Topics+DevOps+Keel+Runbook

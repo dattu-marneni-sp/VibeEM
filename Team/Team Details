@@ -39,3 +39,5 @@ Data Engineering team -  ALT - Architecture
 kelly grizzle
 
 Incident routing, Rootly, and Slack observability channels are documented in Team/Observability.
+
+Kafka topic creation and CAB approval (contacts, schedule, entity vs regular path): Team/Kafka Topic CAB Approval
